@@ -5,6 +5,10 @@
     padding: 0;
 }
 
+html {
+    scroll-behavior: smooth; /* Gives a nice glide effect when clicking nav links */
+}
+
 :root {
     --bg-color: #fde047;
     --hl-color: #ec4895;
@@ -334,6 +338,230 @@ body.menu-open .menu-backdrop {
     60% { transform: translateY(-7px); }
 }
 
+/* --- GALLERY AREA (WIRE-FRAME IMPLEMENTATION) --- */
+.gallery-area {
+    min-height: 100vh;
+    background-color: #ffffff; 
+    position: relative;
+    z-index: 20;
+    padding-bottom: 5rem; /* Space at bottom */
+}
+
+/* MARQUEE TEXTS */
+.marquee-wrapper {
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #000000;
+    overflow: hidden;
+    border-bottom: 3px solid #e5e5e5;
+}
+
+.marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    width: 100%;
+}
+
+.marquee-content {
+    display: flex;
+    width: fit-content;
+    animation: scroll-left 35s linear infinite;
+}
+
+.marquee-content.reverse {
+    animation: scroll-right 30s linear infinite;
+}
+
+.marquee-text-group {
+    display: flex;
+    white-space: nowrap;
+}
+
+.text-small {
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 0.5rem;
+}
+
+.text-large {
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0 0.5rem;
+}
+
+/* Applying rotation specifically to the upside-down block */
+.text-upside-down {
+    transform: rotate(180deg);
+}
+
+@keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } 
+}
+
+@keyframes scroll-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+/* SLIDER GALLERY SECTION */
+.gallery-slider-section {
+    background-color: var(--bg-color);
+    padding: 5rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.slider-container {
+    overflow-x: auto;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar IE */
+    scroll-snap-type: x mandatory;
+    cursor: grab;
+}
+
+.slider-container::-webkit-scrollbar { 
+    display: none; 
+}
+
+.slider-container:active {
+    cursor: grabbing;
+}
+
+.slider-track {
+    display: flex;
+    gap: 2rem;
+    width: max-content;
+    padding: 0 1rem; /* Buffer on ends */
+}
+
+.slider-item {
+    width: 320px; 
+    height: 320px;
+    flex-shrink: 0;
+    border: 4px solid #333977;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    scroll-snap-align: center;
+    background-color: #fff; /* Fallback incase of transparency */
+}
+
+.slider-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.slider-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none; /* Prevents ghost dragging the image natively */
+}
+
+/* NEXT ARROW (Desktop Only) */
+.slider-next-btn {
+    position: absolute;
+    right: 1rem;
+    top: 40%;
+    transform: translateY(-50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background-color: var(--nav-bg);
+    border: 0px solid #a855f7; /* Purple arrow from wireframe */
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.slider-next-btn:hover {
+    background-color: var(--hl-color);
+    color: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.slider-next-btn svg {
+    width: 35px;
+    height: 35px;
+}
+
+/* --- LIGHTBOX MODAL --- */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(20, 20, 25, 0.95); /* Deep dark overlay */
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.lightbox.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lightbox.active img {
+    transform: scale(1);
+}
+
+/* Uses the same hover behavior and visuals as the Burger Menu */
+.lightbox-close {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.lightbox-close:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.lightbox-close svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+}
+
 
 /* --- INTERACTIVE STATES --- */
 body.is-scrolled .sidebar {
@@ -355,6 +583,8 @@ body.menu-open .sidebar {
 body.menu-open .burger-btn {
     display: flex; 
 }
+
+
 
 /* --- RESPONSIVE DESIGN --- */
 @media (max-width: 992px) {
@@ -387,9 +617,24 @@ body.menu-open .burger-btn {
     }
 
     .layer-yellow h1 { font-size: 18vw; }
+
+    /* Hide arrow on mobile to strictly rely on swipe interactions per wireframe specs */
+    .slider-next-btn {
+        display: none;
+    }
+
+    .gallery-slider-section {
+        padding: 4rem 1rem;
+    }
+    
+    .slider-item {
+        width: 260px;
+        height: 260px;
+    }
 }
 
 @media (max-width: 600px) {
+
     .layer-yellow { top: 50%; left: 20%; }
 
     .layer-yellow h1 { 
@@ -416,162 +661,6 @@ body.menu-open .burger-btn {
     }
 
     .scroll-indicator { bottom: 20px; right: 20px; }
-}
 
-/* ---  CONTENT AREA --- */
-.dummy-content {
-    min-height: 100vh;
-    background-color: white; 
-    padding: 5rem 2rem;
-    text-align: center;
-    color: #333977;
-    position: relative;
-    z-index: 20;
+    .text-large { font-size: 2.5rem; }
 }
-.dummy-content h2 { 
-    font-size: 3rem; 
-    margin-bottom: 2rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--bg-color); 
-}
-
-/* --- GALLERY SECTION --- */
-.gallery-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 2rem 0;
-    overflow: hidden;
-}
-
-.gallery-nav {
-    /* Magic CSS Variables */
-    --max-p: 9;
-    --max-z: 9;
-    --is-hovered: 0;
-    --p: 5;
-    --z: 5;
-    --r: calc(var(--max-z) * (var(--p) - 1) + var(--z)); 
-    --r-n: calc((var(--r) - 1) / (var(--max-z) * var(--max-p) - 1));
-    
-    height: 60vh;
-    width: 100%;
-    max-width: 1500px;
-    display: flex;
-    align-items: flex-end;
-    position: relative;
-    perspective: 2000px;
-    transform-style: preserve-3d;
-    --dir: 0deg;
-}
-
-/* Set hovered state mathematically to gracefully reset to neutral when not active */
-.gallery-nav:hover, .gallery-nav:focus-within {
-    --is-hovered: 1;
-}
-
-.gallery-nav a {
-    flex: 1;
-    height: 100%;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    transform-style: preserve-3d;
-    
-    /* Intricate hover intensity calculations */
-    --p-n: calc(var(--i) / (var(--max-p) - 1));
-    --diff: calc(var(--p-n) - var(--r-n));  
-    --u: calc(abs(var(--diff)) / 0.4); 
-    
-    --raw-falloff: clamp(0, calc(0.5 * (1 + cos(min(var(--u), 1) * 180deg))), 1);
-    --falloff: calc(var(--raw-falloff) * var(--is-hovered));
-    
-    --ts: calc(70ms * var(--falloff) + 250ms * (1 - var(--falloff)));
-    --fs: calc(0.1s * var(--falloff) + 0.8s * (1 - var(--falloff)));
-    
-    transition: scale 0.15s, filter var(--fs), transform var(--ts), flex 0.3s;
-    
-    --tilt: calc(clamp(-1, var(--diff) * 5, 1) * var(--falloff) * 70deg);
-    
-    transform: 
-        translateZ(calc(var(--falloff) * 15vw))
-        rotateY(calc(var(--tilt) * cos(var(--dir))))
-        rotateX(calc(var(--tilt) * sin(var(--dir))));
-        
-    filter: 
-        brightness(max(0.4, calc(var(--falloff) * 1.2))) 
-        saturate(var(--falloff));
-}
-
-.gallery-nav a:hover, .gallery-nav a:focus-visible {
-    flex: 4;
-}
-
-.gallery-nav a .img {
-    background-image: var(--img);
-    background-color: #333;
-    background-size: cover;
-    background-position: center;
-    width: 100%;
-    height: 100%;
-    margin: 0 0.2vw;
-    border-radius: 8px;
-}
-
-/* Internal grid dividing the image to track exact mouse position */
-.gallery-nav .hover-zone {
-    position: absolute;
-    inset: 0 -3px;
-    display: flex;
-    z-index: 999;
-}
-
-.gallery-nav .hover-zone i {
-    flex: 1;
-    transition: 0.3s;
-}
-
-.gallery-nav .hover-zone::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.gallery-nav .hover-zone:active::after, 
-.gallery-nav .hover-zone:hover:not(:has(> i:hover))::after,
-.gallery-nav a:focus-visible .hover-zone::after {
-    pointer-events: all;
-}
-
-.gallery-nav:has(.hover-zone:hover):not(:has(i:hover)),
-.gallery-nav:has(a:focus-visible) {
-    --z: 5; /* Default to the middle slice if not on a specific tracker */
-}
-
-/* Routing magic relying on the :has() selector to bind dynamic variables based on mouse location */
-.gallery-nav:has(a:nth-child(1):is(:hover,:focus-visible)) {--p: 1;}
-.gallery-nav:has(a:nth-child(2):is(:hover,:focus-visible)) {--p: 2;}
-.gallery-nav:has(a:nth-child(3):is(:hover,:focus-visible)) {--p: 3;}
-.gallery-nav:has(a:nth-child(4):is(:hover,:focus-visible)) {--p: 4;}
-.gallery-nav:has(a:nth-child(5):is(:hover,:focus-visible)) {--p: 5;}
-.gallery-nav:has(a:nth-child(6):is(:hover,:focus-visible)) {--p: 6;}
-.gallery-nav:has(a:nth-child(7):is(:hover,:focus-visible)) {--p: 7;}
-.gallery-nav:has(a:nth-child(8):is(:hover,:focus-visible)) {--p: 8;}
-.gallery-nav:has(a:nth-child(9):is(:hover,:focus-visible)) {--p: 9;}
-
-.gallery-nav:has(i:nth-child(1):hover) {--z: 1;}
-.gallery-nav:has(i:nth-child(2):hover) {--z: 2;}
-.gallery-nav:has(i:nth-child(3):hover) {--z: 3;}
-.gallery-nav:has(i:nth-child(4):hover) {--z: 4;}
-.gallery-nav:has(i:nth-child(5):hover) {--z: 5;}
-.gallery-nav:has(i:nth-child(6):hover) {--z: 6;}
-.gallery-nav:has(i:nth-child(7):hover) {--z: 7;}
-.gallery-nav:has(i:nth-child(8):hover) {--z: 8;}
-.gallery-nav:has(i:nth-child(9):hover) {--z: 9;}

@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const burgerToggle = document.getElementById('burgerToggle');
     const menuBackdrop = document.getElementById('menuBackdrop');
     const navItems = document.querySelectorAll('.nav-item');
-    const landingSection = document.getElementById('landingSection');
+    const landingSection = document.getElementById('home');
 
     const toggleMenu = () => document.body.classList.toggle('menu-open');
     const closeMenu = () => document.body.classList.remove('menu-open');
@@ -240,4 +240,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', handleScroll);
     handleScroll(); 
+
+    // 5. GALLERY INFINITE SLIDER LOGIC
+    const sliderContainer = document.getElementById('gallerySlider');
+    const sliderTrack = document.getElementById('galleryTrack');
+    const nextBtn = document.getElementById('sliderNextBtn');
+    
+    if (sliderTrack && sliderContainer) {
+        // Clone all items to make the track infinitely scrollable
+        const items = Array.from(sliderTrack.children);
+        items.forEach(item => {
+            const clone = item.cloneNode(true);
+            sliderTrack.appendChild(clone);
+        });
+
+        let autoScrollSpeed = 1;
+        let isAutoScrolling = true;
+        let pauseTimeout;
+
+        // Auto-scroll loop
+        function autoScrollGallery() {
+            if (isAutoScrolling) {
+                sliderContainer.scrollLeft += autoScrollSpeed;
+                // If we reach the end of the first original set of items, snap back seamlessly to 0
+                if (sliderContainer.scrollLeft >= sliderTrack.scrollWidth / 2) {
+                    sliderContainer.scrollLeft = 0;
+                }
+            }
+            requestAnimationFrame(autoScrollGallery);
+        }
+        autoScrollGallery();
+
+        // Pause on manual touch/swipe/hover
+        sliderContainer.addEventListener('mouseenter', () => isAutoScrolling = false);
+        sliderContainer.addEventListener('mouseleave', () => isAutoScrolling = true);
+        sliderContainer.addEventListener('touchstart', () => isAutoScrolling = false, {passive: true});
+        sliderContainer.addEventListener('touchend', () => isAutoScrolling = true);
+
+        // Next Button logic
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                // Pause auto scroll temporarily while the smooth scroll handles the jump
+                isAutoScrolling = false;
+                clearTimeout(pauseTimeout);
+                
+                // Jump 1 item distance (Item width + 2rem gap)
+                const itemWidth = sliderTrack.children[0].offsetWidth;
+                const gap = parseInt(window.getComputedStyle(sliderTrack).gap) || 32;
+                
+                sliderContainer.scrollBy({ left: itemWidth + gap, behavior: 'smooth' });
+                
+                // Resume auto scroll after movement
+                pauseTimeout = setTimeout(() => { isAutoScrolling = true; }, 1500);
+            });
+        }
+    }
+
+    // 6. LIGHTBOX MODAL LOGIC
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+
+    if (sliderTrack && lightbox) {
+        // Using Event Delegation so cloned images also trigger the click
+        sliderTrack.addEventListener('click', (e) => {
+            const clickedItem = e.target.closest('.slider-item');
+            if (clickedItem) {
+                const img = clickedItem.querySelector('img');
+                if (img) {
+                    lightboxImg.src = img.src;
+                    lightbox.classList.add('active');
+                }
+            }
+        });
+
+        const closeLightbox = () => lightbox.classList.remove('active');
+        
+        lightboxClose.addEventListener('click', closeLightbox);
+        
+        // Close if user clicks the background overlay (outside the image)
+        lightbox.addEventListener('click', (e) => {
+            if(e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+    }
 });
