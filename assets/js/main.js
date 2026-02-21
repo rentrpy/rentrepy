@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleScroll = () => {
         if (!landingSection) return;
         
-        const triggerHeight = landingSection.offsetHeight * 0.8; 
+        const triggerHeight = landingSection.offsetHeight * 0.7; 
         if (window.scrollY > triggerHeight) {
             document.body.classList.add('is-scrolled');
         } else {
