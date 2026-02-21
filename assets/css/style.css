@@ -1,0 +1,432 @@
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-color: #fde047;
+    --hl-color: #ec4895;
+    --nav-bg: #333977;
+    --social-color: #ec4895;
+    --social-color2: #5fc7ff;
+    --main-img: url('https://file.garden/ZzX5gcUBcGLpZuFr/main2.png');
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    overflow-x: hidden;
+}
+
+/* --- NAVIGATION & SIDEBAR --- */
+
+/* Burger Toggle Button */
+.burger-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    z-index: 100;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.burger-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.burger-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+}
+
+.icon-close { display: none; }
+body.menu-open .icon-burger { display: none; }
+body.menu-open .icon-close { display: block; }
+
+/* Backdrop Overlay */
+.menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 80;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(3px);
+}
+
+body.menu-open .menu-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Sidebar Base */
+.sidebar {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 270px;
+    height: 98%;
+    border-radius: 24px;
+    background-color: var(--nav-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 3rem 3rem;
+    z-index: 90;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+    transform: translateX(0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+}
+
+/* Logo Space */
+.logo-container {
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+}
+
+.logo-img {
+    max-width: 100%;
+    height: 100%; /* Adapts flawlessly to the 60px height */
+    object-fit: contain;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+/* Custom Uiverse Hover Effect */
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5em 0.5em; /* Gives space for the fill */
+    margin-left: -1em; /* Offsets padding so text remains cleanly aligned left */
+    position: relative;
+    transition: 0.5s ease;
+    cursor: pointer;
+    width: fit-content;
+    z-index: 1; /* Establishes stacking context for pseudo-elements */
+}
+
+.nav-links a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background-color: var(--hl-color); /* Underline uses highlight color */
+    transition: 0.5s ease;
+}
+
+.nav-links a:hover {
+    color: white; 
+    transition-delay: 0.5s;
+}
+
+.nav-links a:hover::before {
+    width: 100%;
+}
+
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 0;
+    width: 100%;
+    background-color: var(--hl-color); /* Expanding fill uses highlight color */
+    transition: 0.4s ease;
+    z-index: -1; /* Pushes fill cleanly behind text */
+}
+
+.nav-links a:hover::after {
+    height: 100%;
+    transition-delay: 0.4s;
+}
+
+/* Social Links */
+.social-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.social-btn {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--social-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--social-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.social-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.social-btn:hover {
+    border: 4px solid var(--social-color2);
+    background-color: var(--social-color2);
+    color: var(--nav-bg);
+    transform: translateY(-3px);
+}
+
+/* --- LANDING AREA --- */
+.landing-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background-color: var(--bg-color);
+    position: relative;
+    overflow: hidden;
+    padding-left: 300px;
+    transition: padding-left 0.4s ease;
+    /* Hardware acceleration fix for browser clipping bugs */
+    transform: translateZ(0);
+}
+
+.hero-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+    width: 100%;
+    height: 100%;
+}
+
+.parallax-layer {
+    position: absolute;
+    will-change: transform;
+}
+
+/* Blue Box */
+.layer-blue {
+    width: 70vw;
+    height: 120vh;
+    background-image: var(--main-img);
+    background-size: contain;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    /* border: 4px solid #3b82f6; */ 
+    z-index: 1;
+    bottom: -5vh; 
+    left: 50%;
+    --base-transform: translate(-50%, 0) scale(1.5);
+    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    filter: blur(4px);
+}
+
+/* Red Box */
+.layer-red {
+    width: 70vw;
+    height: 110vh;
+    background-image: var(--main-img);
+    background-size: contain;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    z-index: 2;
+    bottom: -10vh; 
+    left: 45%;
+    --base-transform: translate(-50%, 0);
+    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    transform-origin: bottom center; /* Keeps it anchored to the bottom while breathing */
+    animation: breatheRed 5s ease-in-out infinite;
+}
+
+@keyframes breatheRed {
+    0%, 100% {
+        transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0)) scale(1);
+    }
+    50% {
+        /* Subtle 1.5% scale up */
+        transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0)) scale(1.015);
+    }
+}
+
+/* Yellow Box */
+.layer-yellow {
+    z-index: 3;
+    top: 15%;
+    left: 50%;
+    --base-transform: translate(-50%, -50%);
+    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    pointer-events: none; 
+    mix-blend-mode: overlay;
+}
+
+.layer-yellow h1 {
+    font-size: 18vw;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 6px #ebf6fd;
+    white-space: nowrap;
+}
+
+/* Purple Box */
+.scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #ec4895; 
+}
+
+.scroll-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-weight: 700;
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.scroll-arrow {
+    font-size: 1.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-15px); }
+    60% { transform: translateY(-7px); }
+}
+
+/* --- DUMMY CONTENT --- */
+.dummy-content {
+    height: 150vh;
+    background-color: #ffffff;
+    padding: 5rem 2rem;
+    text-align: center;
+    font-family: sans-serif;
+    color: #333;
+}
+.dummy-content h2 { font-size: 2.5rem; margin-bottom: 1rem;}
+.dummy-content p { font-size: 1.2rem; opacity: 0.7;}
+
+
+/* --- INTERACTIVE STATES --- */
+body.is-scrolled .sidebar {
+    transform: translateX(-105%);
+}
+
+body.is-scrolled .landing-wrapper {
+    padding-left: 270px; 
+}
+
+body.is-scrolled .burger-btn {
+    display: flex;
+}
+
+body.menu-open .sidebar {
+    transform: translateX(0) !important;
+}
+
+body.menu-open .burger-btn {
+    display: flex; 
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .burger-btn { display: flex; }
+    
+    .sidebar {
+        transform: translateX(-105%);
+        padding-top: 100px;
+    }
+
+    .landing-wrapper { padding-left: 0; }
+
+    body.is-scrolled .landing-wrapper {
+        padding-left: 0; 
+    }
+
+    .layer-blue {
+        width: 100vw;
+        height: 100vh;
+        bottom: 0;
+        background-size: cover; 
+    }
+    
+    .layer-red {
+        width: 100vw;
+        height: 85vh;
+        bottom: -2vh;
+        left: 50%;
+        --base-transform: translate(-50%, 0);
+    }
+
+    .layer-yellow h1 { font-size: 18vw; }
+}
+
+@media (max-width: 600px) {
+    .layer-yellow { top: 50%; left: 20%; }
+
+    .layer-yellow h1 { 
+        writing-mode: vertical-rl;
+        text-orientation: upright; /* Stacks the letters seamlessly */
+        font-size: 11vh; /* Uses viewport height to dynamically fit vertical orientation */
+        letter-spacing: -1vh;
+        -webkit-text-stroke: 3px #ebf6fd; /* Thinner stroke for better legibility stacked */
+    }
+    
+    .layer-red { 
+        width: 140vw; /* Scales it back up beautifully without risking off-center bugs */
+        height: 85vh; 
+        bottom: -2vh; 
+        left: 50%; 
+    }
+    
+    .layer-blue { 
+        width: 100vw; 
+        height: 100vh;
+        bottom: 0; 
+        left: 50%; 
+        background-size: cover; 
+    }
+
+    .scroll-indicator { bottom: 20px; right: 20px; }
+}
+
