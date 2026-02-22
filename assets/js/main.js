@@ -190,6 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.src = LOADER_LOGO_FALLBACK;
         };
     }
+    
+    // 0.5.1 SET FOOTER LOGO TO MATCH LOADER LOGO
+    const footLogo = document.getElementById('bottom-logo');
+    if (footLogo) {
+        footLogo.src = LOADER_LOGO_URL;
+        footLogo.onerror = function() {
+            this.onerror = null;
+            this.src = LOADER_LOGO_FALLBACK;
+        };
+    }
+
 
     // 1. RUN THE LOADER IMMEDIATELY
     createLoadingSequence();
