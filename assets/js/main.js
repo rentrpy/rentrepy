@@ -1,9 +1,16 @@
+// Force the browser to start exactly at the top of the page on refresh
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+window.scrollTo(0, 0);
+
 // ==========================================
 // LOADER CUSTOMIZATION SETTINGS
 // ==========================================
 const LOADER_BG_COLOR = "#000000"; // Background color (Black)
 const LOADER_BAR_COLOR = "#FFD700"; // Loading bar and fill color (Yellow)
-const LOADER_LOGO_URL = "https://file.garden/ZzX5gcUBcGLpZuFr/logotest.png"; // Replace with your logo URL
+const LOADER_LOGO_URL = "./images/logo.png"; // Replace with logo URL
+const LOADER_LOGO_FALLBACK = "https://file.garden/ZzX5gcUBcGLpZuFr/logotest.png"; // If logo fails to load
 const BAR_INITIAL_HEIGHT = "8px"; // Height of the loading bar at the bottom
 
 // TIMINGS (1000 = 1 second)
@@ -39,6 +46,10 @@ function createLoadingSequence() {
     image.alt = "Loading Logo";
     image.style.display = "block";
     image.style.maxWidth = "350px"; // Sensible default constraint
+    image.onerror = function() {
+        this.onerror = null;
+        this.src = LOADER_LOGO_FALLBACK;
+    };
     logoContainer.appendChild(image);
     
     overlay.appendChild(logoContainer);
@@ -156,10 +167,28 @@ function createLoadingSequence() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 0. SET NAV LOGO TO MATCH LOADER LOGO
+    // 0. Fallback for main background image - Checks if primary fetch fails
+    const rootStyles = getComputedStyle(document.documentElement);
+    const mainImgRaw = rootStyles.getPropertyValue('--main-img').trim();
+    const urlMatch = mainImgRaw.match(/url\(['"]?(.*?)['"]?\)/);
+    
+    if (urlMatch && urlMatch[1]) {
+        const testImg = new Image();
+        testImg.onerror = () => {
+            const fallbackRaw = rootStyles.getPropertyValue('--main-img-fallback').trim();
+            document.documentElement.style.setProperty('--main-img', fallbackRaw);
+        };
+        testImg.src = urlMatch[1]; // Attempt to load the primary URL
+    }
+
+    // 0.5 SET NAV LOGO TO MATCH LOADER LOGO
     const navLogo = document.getElementById('nav-logo');
     if (navLogo) {
         navLogo.src = LOADER_LOGO_URL;
+        navLogo.onerror = function() {
+            this.onerror = null;
+            this.src = LOADER_LOGO_FALLBACK;
+        };
     }
 
     // 1. RUN THE LOADER IMMEDIATELY
@@ -223,7 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
         menuBackdrop.addEventListener('click', closeMenu);
     }
     
-    navItems.forEach(item => item.addEventListener('click', closeMenu));
+    navItems.forEach(item => item.addEventListener('click', (e) => {
+        const targetHref = item.getAttribute('href');
+        // Let the scroll listener handle visibility cleanly if clicking Home on desktop
+        if (targetHref === '#home' && window.innerWidth > 992) {
+            return; 
+        } else {
+            closeMenu();
+        }
+    }));
 
     // 4. SCROLL LOGIC
     const handleScroll = () => {
@@ -365,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    
+
     // 6. LIGHTBOX MODAL LOGIC
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
@@ -376,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sliderTrack.addEventListener('click', (e) => {
             const clickedItem = e.target.closest('.slider-item');
             if (clickedItem) {
+                // Since the img has pointer-events: none, we query the src from inside the clicked slider-item div
                 const img = clickedItem.querySelector('img');
                 if (img) {
                     lightboxImg.src = img.src;
@@ -392,6 +430,23 @@ document.addEventListener('DOMContentLoaded', () => {
         lightbox.addEventListener('click', (e) => {
             if(e.target === lightbox) {
                 closeLightbox();
+            }
+        });
+    }
+    
+    // 7. ABOUT SCROLL MARQUEE LOGIC
+    const aboutMarquee = document.getElementById('aboutMarquee');
+    const profileSection = document.getElementById('profile');
+    
+    if (aboutMarquee && profileSection) {
+        window.addEventListener('scroll', () => {
+            const rect = profileSection.getBoundingClientRect();
+            // Check if the section is partially visible in the viewport
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                // Generate a translation value that grows as you scroll down
+                const scrollProgress = window.innerHeight - rect.top;
+                // Move text to the right by modifying the custom CSS variable
+                aboutMarquee.style.setProperty('--scroll-offset', `${scrollProgress * 0.5}px`);
             }
         });
     }

@@ -1,3 +1,14 @@
+/* --- CUSTOM FONT INTEGRATION --- */
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Thin.ttf') format('truetype'); font-weight: 100; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Extra-light.ttf') format('truetype'); font-weight: 200; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Light.ttf') format('truetype'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Semi-bold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Extra-bold.ttf') format('truetype'); font-weight: 800; font-style: normal; }
+@font-face { font-family: 'CustomFont'; src: url('../fonts/Black.ttf') format('truetype'); font-weight: 900; font-style: normal; }
+
 /* Reset and Base Styles */
 * {
     box-sizing: border-box;
@@ -15,13 +26,26 @@ html {
     --nav-bg: #333977;
     --social-color: #ec4895;
     --social-color2: #5fc7ff;
-    --main-img: url('https://file.garden/ZzX5gcUBcGLpZuFr/main2.png');
+
+    /* Variables for main hero art and its automatic fallback */
+    --main-img: url(../../images/main.png);
+    --main-img-fallback: url('https://file.garden/ZzX5gcUBcGLpZuFr/main2.png'); 
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Set CustomFont as priority so Baybayin renders, falling back to Inter/System fonts if needed */
+    font-family: 'CustomFont', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     overflow-x: hidden;
+}
+
+/* --- IMAGE PROTECTION --- */
+/* Disables saving, phantom dragging, and context menus globally */
+img {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
 }
 
 /* --- NAVIGATION & SIDEBAR --- */
@@ -220,7 +244,8 @@ body.menu-open .menu-backdrop {
     padding-left: 300px;
     transition: padding-left 0.4s ease;
     /* Hardware acceleration fix for browser clipping bugs */
-    transform: translateZ(0);
+    /* transform: translateZ(0); */
+    isolation: isolate; 
 }
 
 .hero-area {
@@ -236,7 +261,8 @@ body.menu-open .menu-backdrop {
 
 .parallax-layer {
     position: absolute;
-    will-change: transform;
+    backface-visibility: hidden;
+    /* will-change: transform; */
 }
 
 /* Blue Box */
@@ -253,7 +279,7 @@ body.menu-open .menu-backdrop {
     bottom: -5vh; 
     left: 50%;
     --base-transform: translate(-50%, 0) scale(1.5);
-    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
     filter: blur(4px);
 }
 
@@ -269,18 +295,18 @@ body.menu-open .menu-backdrop {
     bottom: -10vh; 
     left: 45%;
     --base-transform: translate(-50%, 0);
-    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
     transform-origin: bottom center; /* Keeps it anchored to the bottom while breathing */
     animation: breatheRed 5s ease-in-out infinite;
 }
 
 @keyframes breatheRed {
     0%, 100% {
-        transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0)) scale(1);
+        transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px)) scale(1);
     }
     50% {
         /* Subtle 1.5% scale up */
-        transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0)) scale(1.015);
+        transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px)) scale(1.015);
     }
 }
 
@@ -290,7 +316,7 @@ body.menu-open .menu-backdrop {
     top: 15%;
     left: 50%;
     --base-transform: translate(-50%, -50%);
-    transform: var(--base-transform) translate(var(--tx, 0), var(--ty, 0));
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
     pointer-events: none; 
     mix-blend-mode: overlay;
 }
@@ -302,7 +328,25 @@ body.menu-open .menu-backdrop {
     line-height: 1;
     color: transparent;
     -webkit-text-stroke: 6px #ebf6fd;
+    display: inline-block;
+    vertical-align: bottom;
     white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Typewriter Class */
+.typewriter{
+    border-right: 3px solid rgba(255,255,255,.75);
+    animation: typewriter 1s steps(8) 4s 1 normal both,
+             blinkTextCursor 500ms steps(8) 4s infinite normal;
+}
+@keyframes typewriter{
+    from{width: 0;}
+    to{width: 9ch;}
+}
+@keyframes blinkTextCursor{
+    from{border-right-color: rgba(255,255,255,.75);}
+    to{border-right-color: transparent;}
 }
 
 /* Purple Box */
@@ -340,11 +384,9 @@ body.menu-open .menu-backdrop {
 
 /* --- GALLERY AREA (WIRE-FRAME IMPLEMENTATION) --- */
 .gallery-area {
-    min-height: 100vh;
     background-color: #ffffff; 
     position: relative;
     z-index: 20;
-    padding-bottom: 5rem; /* Space at bottom */
 }
 
 /* MARQUEE TEXTS */
@@ -356,7 +398,7 @@ body.menu-open .menu-backdrop {
     gap: 0.5rem;
     color: #000000;
     overflow: hidden;
-    border-bottom: 3px solid #e5e5e5;
+    border-bottom: 0px solid #e5e5e5;
 }
 
 .marquee {
@@ -414,12 +456,18 @@ body.menu-open .menu-backdrop {
 /* SLIDER GALLERY SECTION */
 .gallery-slider-section {
     background-color: var(--bg-color);
-    padding: 5rem 2rem;
+    padding: 5rem 0rem;
     position: relative;
     overflow: hidden;
 }
 
-/* FIX: Changed overflow to hidden and added pan-y to hijack horizontal swipes safely */
+/* Wrapper ensuring the Arrow stays locked to the vertical center of the track itself */
+.slider-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Changed overflow to hidden and added pan-y to hijack horizontal swipes safely */
 .slider-container {
     overflow: hidden;
     cursor: grab;
@@ -431,7 +479,7 @@ body.menu-open .menu-backdrop {
     cursor: grabbing;
 }
 
-/* FIX: Removes default padding to ensure pure mathematical looping */
+/* Removes default padding to ensure pure mathematical looping */
 .slider-track {
     display: flex;
     gap: 2rem;
@@ -440,8 +488,8 @@ body.menu-open .menu-backdrop {
 }
 
 .slider-item {
-    width: 320px; 
-    height: 320px;
+    width: 400px; 
+    height: 400px;
     flex-shrink: 0;
     border: 4px solid #333977;
     border-radius: 1.5rem;
@@ -452,7 +500,8 @@ body.menu-open .menu-backdrop {
 }
 
 .slider-item:hover {
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border: 4px solid var(--hl-color);
+    box-shadow: 0 10px 25px var(--hl-color);
 }
 
 .slider-item img {
@@ -465,7 +514,7 @@ body.menu-open .menu-backdrop {
 /* NEXT ARROW (Desktop Only) */
 .slider-next-btn {
     position: absolute;
-    right: 1rem;
+    right: 2rem;
     top: 50%;
     transform: translateY(-50%);
     width: 65px;
@@ -492,6 +541,206 @@ body.menu-open .menu-backdrop {
 .slider-next-btn svg {
     width: 35px;
     height: 35px;
+}
+
+
+/* SEE MORE EXTERNAL LINK */
+.see-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+}
+
+.see-more-link {
+    color: var(--nav-bg);
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5em 1em;
+    position: relative;
+    transition: 0.5s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1;
+}
+
+.see-more-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background-color: var(--hl-color);
+    transition: 0.5s ease;
+}
+
+.see-more-link:hover {
+    color: white;
+    transition-delay: 0.5s;
+}
+
+.see-more-link:hover::before {
+    width: 100%;
+}
+
+.see-more-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 0;
+    width: 100%;
+    background-color: var(--hl-color);
+    transition: 0.4s ease;
+    z-index: -1;
+}
+
+.see-more-link:hover::after {
+    height: 100%;
+    transition-delay: 0.4s;
+}
+
+.see-more-link svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* --- ABOUT / PROFILE AREA --- */
+.about-area {
+    min-height: 100vh;
+    background-color: var(--nav-bg);
+    color: white;
+    padding: 0 0 5rem 0; /* padding removed from top to fit marquee flush */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 20;
+    overflow: hidden;
+}
+
+.scroll-marquee-container {
+    width: 100%;
+    background: var(--hl-color);
+    color: transparent;
+    -webkit-text-stroke: 2px white;
+    padding: 1rem 0;
+    margin-bottom: 5rem;
+    overflow: hidden;
+}
+
+.scroll-marquee {
+    display: flex;
+    white-space: nowrap;
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    transform: translateX(calc(-30% + var(--scroll-offset, 0px)));
+    will-change: transform;
+}
+
+.about-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+    max-width: 1000px;
+    padding: 0 2rem;
+    width: 100%;
+}
+
+.about-image {
+    flex-shrink: 0;
+    width: 300px;
+    height: 400px;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.about-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.about-text {
+    flex: 1;
+    text-align: left;
+}
+
+.about-text h2 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bg-color);
+}
+
+.about-text p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* --- CONTACT SECTION --- */
+.contact-area {
+    min-height: 70vh;
+    height: 70vh;
+    background-color: #1a1e4a;
+    color: white;
+    padding: 5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 20;
+    text-align: center;
+}
+
+.contact-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contact-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bg-color);
+}
+
+.contact-content p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    max-width: 600px;
+    opacity: 0.9;
+    margin-bottom: 2.5rem;
+}
+
+.contact-socials {
+    margin-top: 0;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer {
+    background-color: #1a1e4a;
+    color: #666;
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.9rem;
 }
 
 /* --- LIGHTBOX MODAL --- */
@@ -521,6 +770,10 @@ body.menu-open .menu-backdrop {
     box-shadow: 0 15px 45px rgba(0,0,0,0.5);
     transform: scale(0.95);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* Safely allow interactions back onto the specific expanded image */
+    pointer-events: none; 
+    z-index: 1;
 }
 
 .lightbox.active img {
@@ -544,6 +797,7 @@ body.menu-open .menu-backdrop {
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 100;
 }
 
 .lightbox-close:hover {
@@ -615,12 +869,30 @@ body.menu-open .burger-btn {
 
 
     .gallery-slider-section {
-        padding: 4rem 1rem;
+        padding: 4rem 0rem;
     }
     
     .slider-item {
         width: 260px;
         height: 260px;
+    }
+
+    .see-more-link {
+        font-size: 1.2rem;
+    }
+    
+    .about-content-wrapper {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .about-text {
+        text-align: center;
+    }
+
+    .scroll-marquee {
+    transform: translateX(calc(-120% + var(--scroll-offset, 0px)));
     }
 }
 
@@ -635,6 +907,21 @@ body.menu-open .burger-btn {
         letter-spacing: -1vh;
         -webkit-text-stroke: 3px #ebf6fd; /* Thinner stroke for better legibility stacked */
     }
+
+    .typewriter{
+    border-right: 0px;
+    border-bottom: 3px solid rgba(255,255,255,.75);
+    animation: typewriterMobile 1s steps(8) 4s 1 normal both,
+            blinkTextCursorMobile 500ms steps(8) 4s infinite normal;
+}
+    @keyframes typewriterMobile{
+    from{height: 0;}
+    to{height: 7.4em;}
+}
+    @keyframes blinkTextCursorMobile{
+    from{border-bottom-color: rgba(255,255,255,.75);}
+    to{border-bottom-color: transparent;}
+}
     
     .layer-red { 
         width: 140vw; /* Scales it back up beautifully without risking off-center bugs */
@@ -659,4 +946,11 @@ body.menu-open .burger-btn {
     .slider-next-btn {
         display: none;
     }
+
+    .slider-item:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .scroll-marquee { font-size: 2.5rem; }
+    
 }
