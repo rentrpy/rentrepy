@@ -369,11 +369,11 @@ body.menu-open .menu-backdrop {
 .marquee-content {
     display: flex;
     width: fit-content;
-    animation: scroll-left 35s linear infinite;
+    animation: scroll-left 50s linear infinite;
 }
 
 .marquee-content.reverse {
-    animation: scroll-right 30s linear infinite;
+    animation: scroll-right 60s linear infinite;
 }
 
 .marquee-text-group {
@@ -419,27 +419,24 @@ body.menu-open .menu-backdrop {
     overflow: hidden;
 }
 
+/* FIX: Changed overflow to hidden and added pan-y to hijack horizontal swipes safely */
 .slider-container {
-    overflow-x: auto;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
-    -ms-overflow-style: none; /* Hide scrollbar IE */
-    scroll-snap-type: x mandatory;
+    overflow: hidden;
     cursor: grab;
-}
-
-.slider-container::-webkit-scrollbar { 
-    display: none; 
+    touch-action: pan-y;
+    width: 100%;
 }
 
 .slider-container:active {
     cursor: grabbing;
 }
 
+/* FIX: Removes default padding to ensure pure mathematical looping */
 .slider-track {
     display: flex;
     gap: 2rem;
     width: max-content;
-    padding: 0 1rem; /* Buffer on ends */
+    will-change: transform;
 }
 
 .slider-item {
@@ -450,13 +447,11 @@ body.menu-open .menu-backdrop {
     border-radius: 1.5rem;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    scroll-snap-align: center;
-    background-color: #fff; /* Fallback incase of transparency */
+    transition: box-shadow 0.3s ease;
+    background-color: #fff;
 }
 
 .slider-item:hover {
-    transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
@@ -471,7 +466,7 @@ body.menu-open .menu-backdrop {
 .slider-next-btn {
     position: absolute;
     right: 1rem;
-    top: 40%;
+    top: 50%;
     transform: translateY(-50%);
     width: 65px;
     height: 65px;
@@ -618,10 +613,6 @@ body.menu-open .burger-btn {
 
     .layer-yellow h1 { font-size: 18vw; }
 
-    /* Hide arrow on mobile to strictly rely on swipe interactions per wireframe specs */
-    .slider-next-btn {
-        display: none;
-    }
 
     .gallery-slider-section {
         padding: 4rem 1rem;
@@ -663,4 +654,9 @@ body.menu-open .burger-btn {
     .scroll-indicator { bottom: 20px; right: 20px; }
 
     .text-large { font-size: 2.5rem; }
+
+    /* Hide arrow on mobile to strictly rely on swipe interactions per wireframe specs */
+    .slider-next-btn {
+        display: none;
+    }
 }

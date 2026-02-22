@@ -241,61 +241,131 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll);
     handleScroll(); 
 
-    // 5. GALLERY INFINITE SLIDER LOGIC
+    // 5. GALLERY INFINITE SLIDER LOGIC (CUSTOM JS DRIVEN)
     const sliderContainer = document.getElementById('gallerySlider');
     const sliderTrack = document.getElementById('galleryTrack');
     const nextBtn = document.getElementById('sliderNextBtn');
     
     if (sliderTrack && sliderContainer) {
-        // Clone all items to make the track infinitely scrollable
-        const items = Array.from(sliderTrack.children);
-        items.forEach(item => {
-            const clone = item.cloneNode(true);
-            sliderTrack.appendChild(clone);
+        const originalItems = Array.from(sliderTrack.children);
+        
+        // Clone the whole array of items 4 extra times (Total 5 complete sets)
+        // This makes it virtually impossible to out-click the buffer
+        for (let i = 0; i < 4; i++) {
+            originalItems.forEach(item => {
+                sliderTrack.appendChild(item.cloneNode(true));
+            });
+        }
+
+        let slideCurrentX = 0;
+        let autoScrollSpeed = 1; 
+        let isHovered = false;
+        let isDragging = false;
+        let startX = 0;
+        let prevX = 0;
+        let animationId;
+        
+        // Helper to grab the exact pixel width of one original set of images (including gap)
+        function getSetWidth() {
+            const itemWidth = originalItems[0].offsetWidth;
+            const gap = parseFloat(window.getComputedStyle(sliderTrack).gap) || 0;
+            return (itemWidth + gap) * originalItems.length;
+        }
+
+        function sliderLoop() {
+            // Naturally move forward if we aren't hovering or touching
+            if (!isDragging && !isHovered) {
+                slideCurrentX -= autoScrollSpeed;
+            }
+            
+            const setWidth = getSetWidth();
+            
+            // Mathematically loop the gallery perfectly under the hood without a visual seam
+            if (slideCurrentX <= -setWidth) {
+                slideCurrentX += setWidth; 
+                // Only immediately apply transform if we aren't currently smooth-scrolling a click
+                if (!isHovered) sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
+            } else if (slideCurrentX > 0) {
+                slideCurrentX -= setWidth;
+                if (!isHovered) sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
+            }
+            
+            if (!isHovered) {
+                sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
+            }
+            
+            animationId = requestAnimationFrame(sliderLoop);
+        }
+        
+        // Kick off the loop
+        animationId = requestAnimationFrame(sliderLoop);
+
+        // Pause behavior
+        sliderContainer.addEventListener('mouseenter', () => isHovered = true);
+        sliderContainer.addEventListener('mouseleave', () => {
+            isHovered = false;
+            isDragging = false; 
         });
 
-        let autoScrollSpeed = 1;
-        let isAutoScrolling = true;
-        let pauseTimeout;
-
-        // Auto-scroll loop
-        function autoScrollGallery() {
-            if (isAutoScrolling) {
-                sliderContainer.scrollLeft += autoScrollSpeed;
-                // If we reach the end of the first original set of items, snap back seamlessly to 0
-                if (sliderContainer.scrollLeft >= sliderTrack.scrollWidth / 2) {
-                    sliderContainer.scrollLeft = 0;
-                }
-            }
-            requestAnimationFrame(autoScrollGallery);
+        // 5a. Touch & Drag Controls (Calculates exact pixel offset to follow finger)
+        function handleDragStart(e) {
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            prevX = slideCurrentX;
+            sliderTrack.style.transition = 'none'; 
+            sliderContainer.style.cursor = 'grabbing';
         }
-        autoScrollGallery();
 
-        // Pause on manual touch/swipe/hover
-        sliderContainer.addEventListener('mouseenter', () => isAutoScrolling = false);
-        sliderContainer.addEventListener('mouseleave', () => isAutoScrolling = true);
-        sliderContainer.addEventListener('touchstart', () => isAutoScrolling = false, {passive: true});
-        sliderContainer.addEventListener('touchend', () => isAutoScrolling = true);
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            const x = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            const walk = x - startX;
+            slideCurrentX = prevX + walk;
+        }
 
-        // Next Button logic
+        function handleDragEnd() {
+            isDragging = false;
+            sliderContainer.style.cursor = 'grab';
+        }
+
+        sliderContainer.addEventListener('mousedown', handleDragStart);
+        sliderContainer.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', handleDragEnd);
+
+        sliderContainer.addEventListener('touchstart', handleDragStart, {passive: true});
+        sliderContainer.addEventListener('touchmove', handleDragMove, {passive: true});
+        sliderContainer.addEventListener('touchend', handleDragEnd);
+
+        // 5b. Next Button Controls
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
-                // Pause auto scroll temporarily while the smooth scroll handles the jump
-                isAutoScrolling = false;
-                clearTimeout(pauseTimeout);
+                const itemWidth = originalItems[0].offsetWidth;
+                const gap = parseFloat(window.getComputedStyle(sliderTrack).gap) || 0;
                 
-                // Jump 1 item distance (Item width + 2rem gap)
-                const itemWidth = sliderTrack.children[0].offsetWidth;
-                const gap = parseInt(window.getComputedStyle(sliderTrack).gap) || 32;
+                // Add CSS transition briefly just to animate the click snap
+                sliderTrack.style.transition = 'transform 0.4s ease-out';
+                slideCurrentX -= (itemWidth + gap);
+                sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
                 
-                sliderContainer.scrollBy({ left: itemWidth + gap, behavior: 'smooth' });
+                // Tell the loop to pause updating while the CSS transition plays
+                isHovered = true;
                 
-                // Resume auto scroll after movement
-                pauseTimeout = setTimeout(() => { isAutoScrolling = true; }, 1500);
+                setTimeout(() => {
+                    // Turn off transition to prevent glitching the auto scroll
+                    sliderTrack.style.transition = 'none';
+                    
+                    // Safety check to ensure we smoothly reset position if the jump passed the loop threshold
+                    const setWidth = getSetWidth();
+                    if (slideCurrentX <= -setWidth) {
+                        slideCurrentX += setWidth;
+                        sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
+                    }
+                    isHovered = false; 
+                }, 400); 
             });
         }
     }
-
+    
     // 6. LIGHTBOX MODAL LOGIC
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
