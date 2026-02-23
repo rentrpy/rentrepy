@@ -446,19 +446,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 7. ABOUT SCROLL MARQUEE LOGIC
-    const aboutMarquee = document.getElementById('aboutMarquee');
-    const profileSection = document.getElementById('profile');
-    
+    // ABOUT
+const aboutMarquee = document.getElementById('aboutMarquee');
+const profileSection = document.getElementById('profile');
+
+    // CONTACT
+const contactMarquee = document.getElementById('contactMarquee');
+const contactMarqueeInverse = document.getElementById('contactMarqueeInverse');
+const contactSection = document.getElementById('links');
+
+window.addEventListener('scroll', () => {
+
+    /* ------------------ ABOUT SECTION ------------------ */
     if (aboutMarquee && profileSection) {
-        window.addEventListener('scroll', () => {
-            const rect = profileSection.getBoundingClientRect();
-            // Check if the section is partially visible in the viewport
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                // Generate a translation value that grows as you scroll down
-                const scrollProgress = window.innerHeight - rect.top;
-                // Move text to the right by modifying the custom CSS variable
-                aboutMarquee.style.setProperty('--scroll-offset', `${scrollProgress * 0.5}px`);
+        const rect = profileSection.getBoundingClientRect();
+
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+            const scrollProgress = window.innerHeight - rect.top;
+
+            aboutMarquee.style.setProperty(
+                '--scroll-offset',
+                `${scrollProgress * 0.5}px`
+            );
+        }
+    }
+
+    /* ------------------ CONTACT SECTION ------------------ */
+    if ((contactMarquee || contactMarqueeInverse) && contactSection) {
+        const rect = contactSection.getBoundingClientRect();
+
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+            const scrollProgress = window.innerHeight - rect.top;
+
+            if (contactMarquee) {
+                contactMarquee.style.setProperty(
+                    '--scroll-offset',
+                    `${scrollProgress * -0.5}px`
+                );
+            }
+
+            if (contactMarqueeInverse) {
+                contactMarqueeInverse.style.setProperty(
+                    '--scroll-offset',
+                    `${scrollProgress * -0.5}px`
+                );
+            }
+        }
+    }
+
+    // 8. PROFILE CARD FLIP LOGIC
+    const profileCard = document.getElementById('profileCard');
+    if (profileCard) {
+        profileCard.addEventListener('click', function() {
+            const innerCard = this.querySelector('.about-image-inner');
+            if (innerCard) {
+                innerCard.classList.toggle('is-flipped');
             }
         });
     }
-});
+
+});});
