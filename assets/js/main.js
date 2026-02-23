@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     // Fetch the true internet time only when the user nears the bottom
-                    fetch('https://worldtimeapi.org/api/timezone/Asia/Manila')
+                    fetch('https://timeapi.io/api/v1/time/current/zone?timezone=Manila%2FAsia')
                         .then(response => response.json())
                         .then(data => {
                             const trueYear = data.datetime.substring(0, 4);
@@ -533,6 +533,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { rootMargin: '600px' }); // Trigger when within 600px of the footer
         
         footerObserver.observe(yearElement);
+    }
+
+    // 10. BACK TO TOP CLICK LOGIC
+    const backToTopBtn = document.getElementById('backToTop');
+    if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            // This forces the button to lose focus/active state
+            // Returning it to its default circular shape immediately
+            backToTopBtn.blur();
+        });
     }
 
 });
