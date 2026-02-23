@@ -446,63 +446,93 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 7. ABOUT SCROLL MARQUEE LOGIC
-    // ABOUT
-const aboutMarquee = document.getElementById('aboutMarquee');
-const profileSection = document.getElementById('profile');
+    // a. Grab all elements once at the top
+    const aboutMarquee = document.getElementById('aboutMarquee');
+    const profileSection = document.getElementById('profile');
+    const contactMarquee = document.getElementById('contactMarquee');
+    const contactMarquee2 = document.getElementById('contactMarqueeInverse');
+    const contactSection = document.getElementById('links');
 
-    // CONTACT
-const contactMarquee = document.getElementById('contactMarquee');
-const contactMarqueeInverse = document.getElementById('contactMarqueeInverse');
-const contactSection = document.getElementById('links');
+    // b. Create a reusable helper function for the math
+    function updateMarquees(section, marqueeElements, multiplier) {
+        if (!section) return; // Safety check
+    
+        const rect = section.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
 
-window.addEventListener('scroll', () => {
+        // Check if the section is partially visible in the viewport
+        if (rect.top < viewportHeight && rect.bottom > 0) {
+            const scrollProgress = viewportHeight - rect.top;
+            // Calculate offset and use template literals (backticks) for the string
+            const offset = `${scrollProgress * multiplier}px`;
 
-    /* ------------------ ABOUT SECTION ------------------ */
-    if (aboutMarquee && profileSection) {
-        const rect = profileSection.getBoundingClientRect();
-
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-            const scrollProgress = window.innerHeight - rect.top;
-
-            aboutMarquee.style.setProperty(
-                '--scroll-offset',
-                `${scrollProgress * 0.5}px`
-            );
-        }
-    }
-
-    /* ------------------ CONTACT SECTION ------------------ */
-    if ((contactMarquee || contactMarqueeInverse) && contactSection) {
-        const rect = contactSection.getBoundingClientRect();
-
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-            const scrollProgress = window.innerHeight - rect.top;
-
-            if (contactMarquee) {
-                contactMarquee.style.setProperty(
-                    '--scroll-offset',
-                    `${scrollProgress * -0.5}px`
-                );
-            }
-
-            if (contactMarqueeInverse) {
-                contactMarqueeInverse.style.setProperty(
-                    '--scroll-offset',
-                    `${scrollProgress * -0.5}px`
-                );
-            }
-        }
-    }
-
-    // 8. PROFILE CARD FLIP LOGIC
-    const profileCard = document.getElementById('profileCard');
-    if (profileCard) {
-        profileCard.addEventListener('click', function() {
-            const innerCard = this.querySelector('.about-image-inner');
-            if (innerCard) {
-                innerCard.classList.toggle('is-flipped');
+            // Apply the CSS variable to all passed marquee elements
+            marqueeElements.forEach(marquee => {
+            if (marquee) {
+                marquee.style.setProperty('--scroll-offset', offset);
             }
         });
+        }
     }
 
-});});
+    // c. Attach a SINGLE scroll event listener
+    window.addEventListener('scroll', () => {
+    
+    // Process About Marquee (Multiplier: 0.5)
+    if (aboutMarquee && profileSection) {
+        updateMarquees(profileSection, [aboutMarquee], 0.5);
+    }
+
+    // Process Contact Marquees (Multiplier: -0.5)
+    if (contactSection && (contactMarquee || contactMarquee2)) {
+        updateMarquees(contactSection, [contactMarquee, contactMarquee2], -0.5);
+    }   
+    });
+
+    // 8. DEFERRED PROFILE CARD FLIP LOGIC
+    const profileCard = document.getElementById('profileCard');
+    if (profileCard) {
+        const profileObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Attach click listener only when the card is near the viewport
+                    profileCard.addEventListener('click', function() {
+                        const innerCard = this.querySelector('.about-image-inner');
+                        if (innerCard) {
+                            innerCard.classList.toggle('is-flipped');
+                        }
+                    });
+                    observer.disconnect(); // Stop observing once initialized
+                }
+            });
+        }, { rootMargin: '200px' }); // Trigger 200px before it scrolls into view
+        
+        profileObserver.observe(profileCard);
+    }
+
+    // 9. DEFERRED DYNAMIC ACCURATE FOOTER YEAR
+    const yearElement = document.getElementById('copyright-year');
+    if (yearElement) {
+        const footerObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Fetch the true internet time only when the user nears the bottom
+                    fetch('https://worldtimeapi.org/api/timezone/Asia/Manila')
+                        .then(response => response.json())
+                        .then(data => {
+                            const trueYear = data.datetime.substring(0, 4);
+                            yearElement.textContent = `© ${trueYear} Rentrepy`;
+                        })
+                        .catch(() => {
+                            yearElement.textContent = `© ${new Date().getFullYear()} Rentrepy`;
+                        });
+                    
+                    observer.disconnect(); // Stop observing to ensure we only fetch once!
+                }
+            });
+        }, { rootMargin: '600px' }); // Trigger when within 600px of the footer
+        
+        footerObserver.observe(yearElement);
+    }
+
+});

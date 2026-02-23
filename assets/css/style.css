@@ -690,29 +690,17 @@ body.menu-open .menu-backdrop {
     white-space: nowrap;
 }
 
-.about-content-wrapper::before {
-    content: "PROFILE";
-    position: absolute;
-    bottom: -0.25em;
-    left: -0.15em;
-    font-size: 24vw;
-    font-weight: 900;
-    line-height: 0.8;
-    color: white;
-    opacity: 0.07;
-    pointer-events: none;
-    z-index: 0;
-    user-select: none;
-    white-space: nowrap;
-}
-
 .about-image {
     flex-shrink: 0;
     width: 300px;
     height: 400px;
     perspective: 1000px; /* Enables 3D space */
+    -webkit-perspective: 1000px;
     cursor: pointer;
     z-index: 2; /* Keeps it above the background text */
+    position: relative; /* Crucial for Z-index working properly to receive clicks */
+    -webkit-tap-highlight-color: transparent; /* Clean touch feedback */
+    
 }
 
 .about-image-inner {
@@ -722,6 +710,7 @@ body.menu-open .menu-backdrop {
     transform: rotateY(0deg) rotateX(0deg);
     transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
 }
 
 /* Hover effect: Skew/tilt like a 3D card */
@@ -744,13 +733,20 @@ body.menu-open .menu-backdrop {
     width: 100%;
     height: 100%;
     backface-visibility: hidden; /* Hides the backside when turned away */
+    -webkit-backface-visibility: hidden;
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
+.about-image-front {
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+}
+
 .about-image-back {
     transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
 }
 
 .about-image-front img,
@@ -796,12 +792,21 @@ body.menu-open .menu-backdrop {
     position: relative;
     z-index: 20;
     text-align: center;
+    overflow: hidden;
 }
 
 .contact-content {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.scroll-marquee-container {
+    width: 100%;
+    padding: 1rem 0;
+    margin-bottom: 5rem;
+    overflow: hidden;
+    user-select: none;
 }
 
 .contact-scroll-marquee {
@@ -832,7 +837,7 @@ body.menu-open .menu-backdrop {
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 5px;
-    transform: rotate(180deg) translateX(calc(+10% + var(--scroll-offset, 0px)));
+    transform: rotate(180deg) translateX(calc(+60% + var(--scroll-offset, 0px)));
     will-change: transform;
     pointer-events: none;
     user-select: none;
