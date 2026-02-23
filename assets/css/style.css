@@ -40,6 +40,31 @@ body {
     overflow-x: hidden;
 }
 
+/* --- GLOBAL SUBTLE PAPER/NOISE TEXTURE --- */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* A lightweight, code-generated SVG noise texture */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    
+    /* Adjust this to make it more or less visible (0.02 to 0.08 is usually the sweet spot) */
+    opacity: 0.1; 
+    
+    /* CRITICAL: This ensures the texture doesn't block any clicks, drags, or hovers */
+    pointer-events: none; 
+    
+    /* Keeps it visually on top of your content, but beneath the loading screen (99999) */
+    z-index: 9998; 
+    
+    /* Blends the grit naturally with your yellows, pinks, and dark blues */
+    mix-blend-mode: overlay; 
+}
+
 /* --- IMAGE PROTECTION --- */
 /* Disables saving, phantom dragging, and context menus globally */
 img {
@@ -112,6 +137,7 @@ body.menu-open .menu-backdrop {
     height: 98%;
     border-radius: 0.5rem;
     background-color: var(--nav-bg);
+    /* background: radial-gradient(circle,rgba(51, 57, 119, 1) 0%, rgba(66, 54, 125, 1) 100%); */
     color: white;
     display: flex;
     flex-direction: column;
@@ -129,7 +155,9 @@ body.menu-open .menu-backdrop {
     display: flex;
     align-items: center;
     width: 100%;
-    height: 60px;
+    height: 70px;
+    pointer-events: none;
+    user-select: none;
 }
 
 .logo-img {
@@ -144,6 +172,7 @@ body.menu-open .menu-backdrop {
     flex-direction: column;
     gap: 1.5rem;
     flex: 1;
+    user-select: none;
 }
 
 /* Custom Uiverse Hover Effect */
@@ -315,6 +344,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     height: 100vh;
     width: 100%;
     background-color: var(--bg-color);
+    background-image: repeating-linear-gradient(128deg, #ffffff27, #ffffff27 2px, transparent 2px, transparent 16px);
     position: relative;
     overflow: hidden;
     padding-left: 300px;
@@ -394,6 +424,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     --base-transform: translate(-50%, -50%);
     transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
     pointer-events: none; 
+    user-select: none;
     mix-blend-mode: overlay;
 }
 
@@ -436,6 +467,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     align-items: center;
     gap: 15px;
     color: #ec4895; 
+    pointer-events: none;
 }
 
 .scroll-text {
@@ -445,6 +477,8 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     letter-spacing: 3px;
     font-size: 1.3rem;
     text-transform: uppercase;
+
+    user-select: none;
 }
 
 .scroll-arrow {
@@ -584,7 +618,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     width: 400px; 
     height: 400px;
     flex-shrink: 0;
-    border: 4px solid #333977;
+    border: 0px solid #333977;
     border-radius: 0.5rem;
     overflow: hidden;
     cursor: pointer;
@@ -602,6 +636,12 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     height: 100%;
     object-fit: cover;
     pointer-events: none; /* Prevents ghost dragging the image natively */
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform-origin: center;
+}
+
+.slider-item:hover img {
+    transform: scale(1.1); /* 90% = zoom out by 10% */
 }
 
 /* NEXT ARROW (Desktop Only) */
@@ -706,7 +746,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 
 /* --- ABOUT / PROFILE AREA --- */
 .about-area {
-    min-height: 100vh;
+    height: 100vh;
     background-color: var(--nav-bg);
     color: white;
     padding: 0 0 5rem 0; /* padding removed from top to fit marquee flush */
@@ -727,6 +767,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     margin-bottom: 5rem;
     overflow: hidden;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .scroll-marquee {
@@ -748,6 +789,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     max-width: 1000px;
     padding: 0 2rem;
     width: 100%;
+    flex-shrink: 0;
 }
 
 .about-content-wrapper::before {
@@ -854,11 +896,185 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     opacity: 0.9;
 }
 
+/* --- TIMELINE AREA --- */
+
+/* Wrapper limits the height to the remaining space and centers it */
+.timeline-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 3rem;
+    flex: 1; /* Tells it to take up available remaining space in the flex container */
+    min-height: 0; /* Crucial: Allows the child to overflow and scroll instead of expanding the section */
+    position: relative;
+    padding: 0 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The actual scrollable box */
+.timeline-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 1.5rem;
+    padding-bottom: 2rem;
+    
+    /* UX Cue 1: Fade out the bottom text so it looks like it goes "under" the fold */
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+
+    /* Firefox scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--hl-color) rgba(255, 255, 255, 0.05);
+}
+
+/* UX Cue 2: Custom Webkit Scrollbar */
+.timeline-container::-webkit-scrollbar {
+    width: 6px;
+}
+.timeline-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+.timeline-container::-webkit-scrollbar-thumb {
+    background: var(--hl-color);
+    border-radius: 10px;
+}
+
+/* Timeline Item Layout */
+.timeline-item {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+/* The Vertical Line */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 110px; /* Offset to sit between date and text */
+    top: 5px;
+    bottom: -2.5rem; /* Connects to the next item */
+    width: 2px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Remove the line trailing past the last item */
+.timeline-item:last-child::before {
+    display: none;
+}
+
+/* The Glowing Dot */
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 106px; /* Centered perfectly over the 2px line */
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--hl-color);
+    box-shadow: 0 0 10px var(--hl-color);
+}
+
+.timeline-date {
+    width: 90px;
+    flex-shrink: 0;
+    text-align: right;
+    font-weight: 700;
+    color: var(--social-color2); /* Uses your light blue */
+    font-size: 0.95rem;
+    padding-top: 1px;
+}
+
+.timeline-content {
+    flex: 1;
+    padding-left: 1rem;
+    letter-spacing: 1px;
+}
+
+.timeline-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--bg-color); /* Uses your yellow */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timeline-content p {
+    font-size: 1rem;
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+/* UX Cue 3: The bouncing scroll hint */
+.timeline-scroll-hint {
+    position: absolute;
+    bottom: 0;
+    right: 2rem;
+    color: var(--social-color2);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    z-index: 10;
+    animation: bounce-small 2s infinite;
+}
+
+@keyframes bounce-small {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-5px); }
+    60% { transform: translateY(-3px); }
+}
+
+/* Mobile Adjustments for Timeline */
+@media (max-width: 600px) {
+    .timeline-item {
+        gap: 0.5rem;
+        flex-direction: column;
+    }
+    
+    /* Shift the line and dot to the left for mobile screens */
+    .timeline-item::before {
+        left: 15px;
+        top: 30px;
+        bottom: -1rem;
+    }
+    
+    .timeline-item::after {
+        left: 11px;
+        top: 30px;
+    }
+    
+    .timeline-date {
+        text-align: left;
+        width: auto;
+        padding-left: 35px;
+        color: var(--hl-color); /* Swap color for hierarchy on mobile */
+    }
+    
+    .timeline-content {
+        padding-left: 35px;
+    }
+
+    .timeline-scroll-hint {
+        right: 50%;
+        transform: translateX(50%);
+        bottom: -10px;
+        animation: none; /* Turn off bounce to keep mobile UI calm */
+    }
+}
+
 /* --- CONTACT SECTION --- */
 .contact-area {
     min-height: 70vh;
     height: 70vh;
     background-color: #1a1e4a;
+    background-image: repeating-linear-gradient(128deg, #ffffff0e, #ffffff0e 1px, transparent 1px, transparent 16px);
     color: white;
     padding: 5rem 2rem;
     display: flex;
@@ -877,12 +1093,13 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     align-items: center;
 }
 
-.scroll-marquee-container {
+.contact-marquee-container {
     width: 100%;
     padding: 1rem 0;
     margin-bottom: 5rem;
     overflow: hidden;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .contact-scroll-marquee {
@@ -913,7 +1130,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 5px;
-    transform: rotate(180deg) translateX(calc(+60% + var(--scroll-offset, 0px)));
+    transform: rotate(180deg) translateX(calc(+30% + var(--scroll-offset, 0px)));
     will-change: transform;
     pointer-events: none;
     user-select: none;
@@ -944,12 +1161,14 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 }
 
 .footer {
-    background-color: #1a1e4a;
-    color: #868686;
+    background: #1A1E4A;
+    background: linear-gradient(180deg,rgba(26, 30, 74, 1) 0%, rgba(50, 29, 82, 1) 100%);
+    color: #d8d8d8;
     text-align: center;
     padding: 2rem;
     letter-spacing: 1px;
     font-size: 1rem;
+    user-select: none;
 }
 
 .logo-footer {
@@ -959,6 +1178,8 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     justify-content: center;
     width: 100%;
     height: 80px;
+    pointer-events: none;
+    user-select: none;
 }
 
 .logo-bottom-img {
@@ -1104,6 +1325,7 @@ body.menu-open .burger-btn {
     .see-more-link {
         font-size: 1.2rem;
     }
+
     
     .about-content-wrapper {
         flex-direction: column;
@@ -1113,6 +1335,17 @@ body.menu-open .burger-btn {
     
     .about-text {
         text-align: center;
+    }
+
+    /* Shrink the huge margins to save vertical space */
+    .scroll-marquee-container {
+        margin-bottom: 2rem; 
+    }
+    
+    /* Shrink the profile image a bit for tablets */
+    .about-image {
+        width: 225px;
+        height: 300px;
     }
 
     .scroll-marquee {
@@ -1175,8 +1408,25 @@ body.menu-open .burger-btn {
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
+    .about-area {
+        height: auto; 
+        min-height: 100vh;
+        padding-bottom: 4rem; 
+    }
+
+    /* Shrink the profile image further for phones */
+    .about-image {
+        width: 180px;
+        height: 240px;
+    }
+
+    .about-content-wrapper {
+        gap: 1.5rem;
+    }
+
     .scroll-marquee-container {
     -webkit-text-stroke: 1px white;
+    margin-bottom: 1rem;
     }
 
     .scroll-marquee { font-size: 2.5rem; }
@@ -1185,4 +1435,18 @@ body.menu-open .burger-btn {
         font-size: 2.5rem;
     }
     
+    /* Give the timeline a fixed height so it still scrolls internally 
+       even though the parent section is now "height: auto" */
+    .timeline-wrapper {
+        min-height: 350px; 
+        margin-top: 2rem;
+    }
+
+    .timeline-scroll-hint{
+        font-size: 0px;
+    }
+
+    .logo-bottom-img {
+    height: 60%; 
+}
 }
