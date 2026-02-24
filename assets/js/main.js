@@ -33,7 +33,7 @@ const RAW_SVG_LOGO = `
 
 // 2. Encode the SVG so your <img> tags can read it instantly as a local URL
 const LOADER_LOGO_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(RAW_SVG_LOGO)}`; // Replace with logo URL
-const LOADER_LOGO_FALLBACK = "https://file.garden/ZzX5gcUBcGLpZuFr/logotest.png"; // If logo fails to load
+const LOADER_LOGO_FALLBACK = ""; // If logo fails to load
 const BAR_INITIAL_HEIGHT = "8px"; // Height of the loading bar at the bottom
 
 // TIMINGS (1000 = 1 second)
@@ -42,7 +42,15 @@ const TIME_TO_JUMP = 500; // Duration of the logo jump
 const TIME_TO_EXPAND = 700; // Duration of the yellow bar expanding upwards
 const TIME_TO_FADEOUT = 800; // Duration of the final fade out to reveal the site
 
-function createLoadingSequence() {
+
+function createLoadingSequence(imagePromise) {
+    // Track if the image is fully downloaded
+    let isImageReady = false;
+    if (imagePromise) {
+        imagePromise.then(() => { isImageReady = true; });
+    } else {
+        isImageReady = true;
+    }
     // 1. Create the main overlay background
     const overlay = document.createElement("div");
     overlay.style.position = "fixed";
@@ -82,35 +90,39 @@ function createLoadingSequence() {
     
     overlay.appendChild(logoContainer);
 
-    // 3. Create the actual colored bar directly on the overlay
+// 4. Create the colored bar (GPU OPTIMIZED)
     const loadingBar = document.createElement("div");
     loadingBar.style.position = "absolute";
     loadingBar.style.bottom = "0";
     loadingBar.style.left = "0";
-    loadingBar.style.width = "0%";
-    loadingBar.style.height = BAR_INITIAL_HEIGHT;
+    loadingBar.style.width = "100%";
+    loadingBar.style.height = "100%"; // Set to full size immediately
     loadingBar.style.backgroundColor = LOADER_BAR_COLOR;
-    loadingBar.style.zIndex = "1"; // Behind the logo
-    loadingBar.style.transition = `width ${TIME_TO_LOAD}ms linear`; // Width animation
+    loadingBar.style.zIndex = "1"; 
+    
+    // Set origin to bottom left so it scales up and right
+    loadingBar.style.transformOrigin = "bottom left"; 
+    // Calculate 8px relative to screen height for the starting scale
+    const initialScaleY = parseInt(BAR_INITIAL_HEIGHT) / window.innerHeight;
+    loadingBar.style.transform = `scale(0, ${initialScaleY})`; 
     overlay.appendChild(loadingBar);
 
-    // 4. Create the percentage text above the bar
+    // 5. Create the percentage text (GPU OPTIMIZED)
     const percentageText = document.createElement("div");
     percentageText.style.position = "absolute";
-    percentageText.style.bottom = `calc(${BAR_INITIAL_HEIGHT} + 8px)`; // Sits 8px above the bar
-    percentageText.style.left = "0%";
-    percentageText.style.transform = "translateX(0%)";
-    percentageText.style.color = LOADER_BAR_COLOR; // Match the bar color
+    percentageText.style.bottom = `calc(${BAR_INITIAL_HEIGHT} + 8px)`; 
+    percentageText.style.left = "0"; // Lock to left edge
+    percentageText.style.color = LOADER_BAR_COLOR; 
     percentageText.style.fontFamily = "sans-serif";
     percentageText.style.fontWeight = "bold";
     percentageText.style.fontSize = "18px";
     percentageText.style.zIndex = "2";
-    // Transition left and transform to keep it exactly on the leading edge without overflowing the screen
-    percentageText.style.transition = `left ${TIME_TO_LOAD}ms linear, transform ${TIME_TO_LOAD}ms linear, opacity 0.3s ease`;
+    percentageText.style.transition = `opacity 0.3s ease`;
     percentageText.innerText = "0%";
+    percentageText.style.transform = "translateX(0)";
     overlay.appendChild(percentageText);
 
-    // 5. Add custom CSS keyframes for animations
+    // 5. Add custom CSS keyframes
     const style = document.createElement("style");
     style.textContent = `
         @keyframes fadeInLogo {
@@ -126,67 +138,100 @@ function createLoadingSequence() {
     document.body.appendChild(overlay);
 
     // ==========================================
-    // ANIMATION SEQUENCE LOGIC
+    // JS-DRIVEN ANIMATION SEQUENCE
     // ==========================================
+    let currentProgress = 0;
+    let lastTime = performance.now();
 
-    // Start filling the loading bar slightly after DOM paints
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            loadingBar.style.width = "100%";
-            
-            // Move the percentage text along with the bar
-            percentageText.style.left = "100%";
-            // Shift its anchor to the right at the end so the text doesn't go off-screen
-            percentageText.style.transform = "translateX(-100%)"; 
+    const updateProgress = (timestamp) => {
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
 
-            // Animate the number counting from 0 to 100
-            let startTimestamp = null;
-            const updatePercentage = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / TIME_TO_LOAD, 1);
-                percentageText.innerText = Math.floor(progress * 100) + "%";
-                
-                if (progress < 1) {
-                    window.requestAnimationFrame(updatePercentage);
-                }
-            };
-            window.requestAnimationFrame(updatePercentage);
-        });
-    });
+        // Calculate step size based on TIME_TO_LOAD
+        let progressStep = (100 / TIME_TO_LOAD) * deltaTime;
 
-    // After loading bar fills, make the logo jump
-    setTimeout(() => {
-        // Fade out the percentage text so it disappears smoothly before the screen expands
+        if (currentProgress < 99) {
+            currentProgress += progressStep;
+        } else if (currentProgress >= 99 && currentProgress < 100) {
+            if (isImageReady) {
+                // Image is ready! Zoom to 100% slightly faster to finish up
+                currentProgress += progressStep * 2; 
+            } else {
+                // Hold exactly at 99% while waiting for the image
+                currentProgress = 99;
+            }
+        }
+
+        // Clamp to exactly 100 max
+        currentProgress = Math.min(currentProgress, 100);
+
+        // OPTIMIZED: Use GPU transforms instead of width/left
+        loadingBar.style.transform = `scale(${currentProgress / 100}, ${initialScaleY})`;
+        
+        percentageText.innerText = Math.floor(currentProgress) + "%";
+        // This CSS math brilliantly moves the text across the screen minus its own width
+        percentageText.style.transform = `translateX(calc(${currentProgress}vw - ${currentProgress}%))`;
+
+        if (currentProgress < 100) {
+            window.requestAnimationFrame(updateProgress);
+        } else {
+            // SEQUENCE TRIGGER: Bar reached 100%
+            triggerNextPhase();
+        }
+    };
+
+    // Kick off the loading loop
+    window.requestAnimationFrame(updateProgress);
+
+    // This handles the logo jump and background reveal AFTER 100% is reached
+    function triggerNextPhase() {
         percentageText.style.opacity = "0";
-
-        // FIX: Lock in the opacity to 1 before overwriting the animation.
         logoContainer.style.opacity = "1";
         logoContainer.style.animation = `jumpLogo ${TIME_TO_JUMP}ms ease-in-out`;
         
-        // As the jump finishes, expand the yellow bar to fill the screen
         setTimeout(() => {
-            // Change transition property to animate height instead of width
-            loadingBar.style.transition = `height ${TIME_TO_EXPAND}ms cubic-bezier(0.65, 0, 0.35, 1)`;
-            loadingBar.style.height = "100%";
-
-            // Optional: Hide the logo as the yellow fills the screen
+            // OPTIMIZED: Expand using scale instead of height
+            loadingBar.style.transition = `transform ${TIME_TO_EXPAND}ms cubic-bezier(0.65, 0, 0.35, 1)`;
+            loadingBar.style.transform = `scale(1, 1)`; // Expands to 100% width and 100% height
+            
             logoContainer.style.transition = `opacity ${TIME_TO_EXPAND / 2}ms ease`;
             logoContainer.style.opacity = "0";
 
-            // After expansion is done, fade out the whole overlay
             setTimeout(() => {
                 overlay.style.opacity = "0";
                 
-                // Remove from DOM completely after fade out
-                setTimeout(() => {
-                    overlay.remove();
+                setTimeout(() => { 
+                    overlay.remove(); 
+                    
+                    // --- NEW: RE-ENABLE SCROLL & PARALLAX ---
+                    window.isLoaderActive = false; // Turn off the lock
+                    
+                    // 1. Restore native scrolling
+                    document.body.style.overflow = ''; 
+                    
+                    // 2. Tell Lenis to resume smooth scrolling
+                    if (typeof lenis !== 'undefined') {
+                        lenis.start(); 
+                    }
+                    
+                    // 3. Kick off the Parallax animation safely now that the screen is visible
+                    if (window.matchMedia("(min-width: 600px)").matches) {
+                        if (typeof window.startParallax === 'function') window.startParallax();
+                    }
                 }, TIME_TO_FADEOUT);
-
+                
             }, TIME_TO_EXPAND);
 
-        }, TIME_TO_JUMP); // Wait for the jump to complete before expanding
+        }, TIME_TO_JUMP); 
 
-    }, TIME_TO_LOAD); // Wait for the bar to fill before jumping
+        // --- TRIGGER TYPEWRITER 2 SECONDS LATER ---
+        setTimeout(() => {
+            const heroText = document.querySelector('.typewriter');
+            if (heroText) {
+                heroText.classList.add('is-typing');
+            }
+        }, 1800); // 2000 milliseconds = 2 seconds
+    }
 }
 
 
@@ -195,19 +240,27 @@ function createLoadingSequence() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 0. Fallback for main background image - Checks if primary fetch fails
+    // 0. CREATE IMAGE PROMISE (Checks if hero image is fully loaded)
     const rootStyles = getComputedStyle(document.documentElement);
     const mainImgRaw = rootStyles.getPropertyValue('--main-img').trim();
     const urlMatch = mainImgRaw.match(/url\(['"]?(.*?)['"]?\)/);
     
-    if (urlMatch && urlMatch[1]) {
-        const testImg = new Image();
-        testImg.onerror = () => {
-            const fallbackRaw = rootStyles.getPropertyValue('--main-img-fallback').trim();
-            document.documentElement.style.setProperty('--main-img', fallbackRaw);
-        };
-        testImg.src = urlMatch[1]; // Attempt to load the primary URL
-    }
+    const heroImagePromise = new Promise((resolve) => {
+        if (urlMatch && urlMatch[1]) {
+            const testImg = new Image();
+            // Resolve when image loads successfully
+            testImg.onload = () => resolve(); 
+            // If it fails, load fallback and resolve anyway so site doesn't freeze
+            testImg.onerror = () => {
+                const fallbackRaw = rootStyles.getPropertyValue('--main-img-fallback').trim();
+                document.documentElement.style.setProperty('--main-img', fallbackRaw);
+                resolve(); 
+            };
+            testImg.src = urlMatch[1]; 
+        } else {
+            resolve(); // No image found in CSS, proceed immediately
+        }
+    });
 
     // 0.5 SET NAV LOGO TO MATCH LOADER LOGO
     const navLogo = document.getElementById('nav-logo');
@@ -229,39 +282,40 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // --- LOCK DOWN SCROLL AND PARALLAX ON LOAD ---
+    window.isLoaderActive = true;
+    document.body.style.overflow = 'hidden'; // Prevents native scroll instantly
+    
+    // Catch Lenis slightly after it initializes in the HTML file to stop it
+    setTimeout(() => {
+        if (typeof lenis !== 'undefined') lenis.stop();
+    }, 100);
 
     // 1. RUN THE LOADER IMMEDIATELY
-    createLoadingSequence();
+    createLoadingSequence(heroImagePromise);
 
-    // 2. SMOOTH PARALLAX LOGIC (LERP)
+// 2. SMOOTH PARALLAX LOGIC (LERP)
     const layers = document.querySelectorAll('.parallax-layer');
-    
-    // Target coordinates (where the mouse is)
-    let targetX = 0;
-    let targetY = 0;
-    
-    // Current coordinates (where the elements are drawn)
-    let currentX = 0;
-    let currentY = 0;
-
-    // Store the animation ID so we can cancel it later
+    let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
     let parallaxRAF = null;
 
-    // Listen to the whole document so parallax works even over the nav bar
     document.addEventListener('mousemove', (e) => {
+        // Ignore mouse tracking while loader is covering the screen
+        if (window.isLoaderActive) return; 
+        
         targetX = e.clientX - window.innerWidth / 2;
         targetY = e.clientY - window.innerHeight / 2;
     });
 
-    // Gently return to center when mouse leaves the browser
     document.addEventListener('mouseleave', () => {
         targetX = 0;
         targetY = 0;
     });
 
-    // The animation loop
     function animateParallax() {
-        // Lerp math: glide 5% of the distance to the target every frame
+        // Double check: Don't run the math loop if loader is up
+        if (window.isLoaderActive) return; 
+
         currentX += (targetX - currentX) * 0.05;
         currentY += (targetY - currentY) * 0.05;
 
@@ -273,26 +327,28 @@ document.addEventListener('DOMContentLoaded', () => {
             layer.style.setProperty('--ty', `${yOffset}px`);
         });
 
-        // Loop smoothly on the monitor's refresh rate
-        requestAnimationFrame(animateParallax);
+        parallaxRAF = requestAnimationFrame(animateParallax);
     }
     
-    // Media Query listener to toggle the animation
+    // Expose a function so the loader can trigger this when finished
+    window.startParallax = function() {
+        if (!parallaxRAF) {
+            animateParallax();
+        }
+    };
+    
     const desktopMedia = window.matchMedia("(min-width: 600px)");
     
     function manageParallaxState(media) {
         if (media.matches) {
-            // Desktop (> 600px): Start the animation loop if it isn't running
-            if (!parallaxRAF) {
+            // Only start if the loader is actually gone
+            if (!window.isLoaderActive && !parallaxRAF) {
                 animateParallax();
             }
         } else {
-            // Mobile (< 600px): Completely stop the loop to save resources
             if (parallaxRAF) {
                 cancelAnimationFrame(parallaxRAF);
                 parallaxRAF = null;
-                
-                // Optional but recommended: Reset positions so layers don't get stuck off-center
                 layers.forEach(layer => {
                     layer.style.setProperty('--tx', '0px');
                     layer.style.setProperty('--ty', '0px');
@@ -301,11 +357,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-        // a. Run the check immediately on page load
-        manageParallaxState(desktopMedia);
+    // REMOVED: manageParallaxState(desktopMedia); 
+    // We no longer trigger this on load. The loader triggers it via window.startParallax!
     
-        // b. Listen for screen resizing (e.g., rotating a tablet or resizing a desktop window)
-        desktopMedia.addEventListener('change', manageParallaxState);
+    desktopMedia.addEventListener('change', manageParallaxState);
+
 
     // 3. NAVIGATION MENU LOGIC
     const burgerToggle = document.getElementById('burgerToggle');
@@ -313,9 +369,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const landingSection = document.getElementById('home');
 
-    const toggleMenu = () => document.body.classList.toggle('menu-open');
-    const closeMenu = () => document.body.classList.remove('menu-open');
+    // Enhanced toggle logic that controls Lenis safely
+    const toggleMenu = () => {
+        const isNowOpen = document.body.classList.toggle('menu-open');
+        
+        if (isNowOpen) {
+            if (typeof lenis !== 'undefined') lenis.stop();
+            document.body.style.overflow = 'hidden'; 
+        } else {
+            if (typeof lenis !== 'undefined') lenis.start();
+            document.body.style.overflow = '';
+        }
+    };
 
+    const closeMenu = () => {
+        // THE FIX: Only execute if the menu is actually open to prevent spamming!
+        if (document.body.classList.contains('menu-open')) {
+            document.body.classList.remove('menu-open');
+            if (typeof lenis !== 'undefined') lenis.start();
+            document.body.style.overflow = '';
+        }
+    };
     if (burgerToggle && menuBackdrop) {
         burgerToggle.addEventListener('click', toggleMenu);
         menuBackdrop.addEventListener('click', closeMenu);
@@ -323,13 +397,55 @@ document.addEventListener('DOMContentLoaded', () => {
     
     navItems.forEach(item => item.addEventListener('click', (e) => {
         const targetHref = item.getAttribute('href');
-        // Let the scroll listener handle visibility cleanly if clicking Home on desktop
-        if (targetHref === '#home' && window.innerWidth > 992) {
-            return; 
+        
+        if (targetHref.startsWith('#')) {
+            e.preventDefault();
+            
+            // 1. SMART MENU HANDLING
+            if (targetHref === '#home' && window.innerWidth > 992) {
+                // Desktop Home Click: Unlock Lenis so it can scroll, 
+                // but DO NOT close the menu visually so it doesn't flicker.
+                if (typeof lenis !== 'undefined') lenis.start();
+                document.body.style.overflow = '';
+            } else {
+                // Mobile or other links: Close menu normally
+                closeMenu();
+            }
+
+            // 2. EXECUTE SMOOTH SCROLL
+            const target = document.querySelector(targetHref);
+            if (target) {
+                lenis.scrollTo(target, {
+                    offset: -80,
+                    duration: 1.2
+                });
+            }
+        }
+    
+    if (targetHref.startsWith('#')) {
+        e.preventDefault();
+        
+        // Always scroll smoothly with Lenis
+        const target = document.querySelector(targetHref);
+        if (target) {
+            lenis.scrollTo(target, {
+                offset: -80,
+                duration: 1.2
+            });
+        }
+        
+        // Menu logic:
+        if (targetHref === '#home' && isDesktop) {
+            // Desktop #home: scroll ONLY, no menu close
+            return;
         } else {
+            // Mobile #home OR any other anchor: scroll + close menu
             closeMenu();
         }
-    }));
+    }
+}));
+
+
 
     // 4. SCROLL LOGIC
     const handleScroll = () => {
@@ -340,12 +456,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('is-scrolled');
         } else {
             document.body.classList.remove('is-scrolled');
-            if(window.innerWidth > 992) closeMenu();
+            
+            // Under-the-hood cleanup: Silently remove the active class on desktop 
+            // without triggering the closeMenu() fade animations
+            if(window.innerWidth > 992) {
+                document.body.classList.remove('menu-open');
+            }
         }
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); 
+    handleScroll();
 
     // 5. GALLERY INFINITE SLIDER LOGIC (CUSTOM JS DRIVEN)
     const sliderContainer = document.getElementById('gallerySlider');
@@ -601,38 +722,25 @@ document.addEventListener('DOMContentLoaded', () => {
         profileObserver.observe(profileCard);
     }
 
-    // 9. DEFERRED DYNAMIC ACCURATE FOOTER YEAR
+    // 9.  FOOTER YEAR
     const yearElement = document.getElementById('copyright-year');
+
     if (yearElement) {
-        const footerObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Fetch the true internet time only when the user nears the bottom
-                    fetch('https://timeapi.io/api/v1/time/current/zone?timezone=Manila%2FAsia')
-                        .then(response => response.json())
-                        .then(data => {
-                            const trueYear = data.datetime.substring(0, 4);
-                            yearElement.textContent = `© ${trueYear} Rentrepy`;
-                        })
-                        .catch(() => {
-                            yearElement.textContent = `© ${new Date().getFullYear()} Rentrepy`;
-                        });
-                    
-                    observer.disconnect(); // Stop observing to ensure we only fetch once!
-                }
-            });
-        }, { rootMargin: '600px' }); // Trigger when within 600px of the footer
-        
-        footerObserver.observe(yearElement);
+        const MIN_YEAR = 2026; // ← set your minimum year here
+        const currentYear = new Date().getFullYear();
+
+        const displayYear = Math.max(currentYear, MIN_YEAR);
+
+        yearElement.textContent = `© ${displayYear} Rentrepy`;
     }
 
     // 10. BACK TO TOP CLICK LOGIC
     const backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) {
         backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+            lenis.scrollTo(0, {
+                immediate: false,   // Smooth animation (default)
+                duration: 1.2,
             });
 
             // This forces the button to lose focus/active state
@@ -640,5 +748,100 @@ document.addEventListener('DOMContentLoaded', () => {
             backToTopBtn.blur();
         });
     }
+
+    // 11. FOOTER EASTER EGG LOGIC
+    const footerLogo = document.getElementById('bottom-logo');
+    const theme = {
+        '--bg-color': '#ff6d7b',
+        '--nav-bg': '#2f2c6a',
+        '--hl-color': '#2dd4bf',
+        '--social-color': '#2dd4bf',
+        '--contact-bg': '#1e1b4b',
+        '--footer-bg': '#1e1b4b'
+    };
+    if (footerLogo) {
+        footerLogo.style.pointerEvents = 'auto'; 
+        footerLogo.style.cursor = 'default';
+
+        let clickCount = 0;
+        let clickTimer;
+
+        function handleEasterEggClick() {
+            clickCount++;
+
+            clearTimeout(clickTimer);
+
+            if (clickCount >= 10) {
+                // Swap the background color
+                Object.entries(theme).forEach(([key, value]) => {document.documentElement.style.setProperty(key, value);});
+                
+                // Swap the hero image
+                document.documentElement.style.setProperty('--main-img', "url('https://res.cloudinary.com/dcmvh3uii/image/upload/web-bonus_ny5bxv.webp')"); 
+                
+                // Smooth scroll back to the top
+                if (typeof lenis !== 'undefined') {
+                    lenis.scrollTo(0, {
+                        duration: 1.5,
+                        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) 
+                    });
+                }
+
+                // Remove the listener so it never fires again!
+                footerLogo.removeEventListener('click', handleEasterEggClick);
+                
+                // Restore the pointer-events to 'none' to make it completely unclickable again
+                footerLogo.style.pointerEvents = 'none';
+
+            } else {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 1000);
+            }
+        }
+
+        // Attach the named function to the click event
+        footerLogo.addEventListener('click', handleEasterEggClick);
+    }
+
+    // 12. MAGNETIC BUTTON MICRO-INTERACTION
+    const magneticButtons = document.querySelectorAll('.social-btn');
+    
+    // Only apply on non-touch devices to save mobile battery
+    if (window.matchMedia("(pointer: fine)").matches) {
+        magneticButtons.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                // Calculate distance from center of the button
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                // Move the button 30% of the distance toward the mouse
+                btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px) scale(1.1)`;
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                // Snap back to original position
+                btn.style.transform = 'translate(0px, 0px) scale(1)';
+            });
+        });
+    }
+
+    // 13. TEXT REVEAL ON SCROLL
+    const revealElements = document.querySelectorAll('.reveal-up');
+    
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                // Optional: Stop observing once revealed so it doesn't animate backwards
+                observer.unobserve(entry.target); 
+            }
+        });
+    }, { 
+        rootMargin: '0px', 
+        threshold: 0.50 // Triggers when n% of the element is visible
+    });
+
+    revealElements.forEach(el => revealObserver.observe(el));
 
 });

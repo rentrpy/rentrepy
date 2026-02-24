@@ -18,7 +18,7 @@
 }
 
 html {
-    scroll-behavior: smooth; /* Gives a nice glide effect when clicking nav links */
+    scroll-behavior: auto; /* Gives a nice glide effect when clicking nav links */
 }
 
 :root {
@@ -27,10 +27,13 @@ html {
     --nav-bg: #333977;
     --social-color: #ec4895;
     --social-color2: #5fc7ff;
+    --contact-bg: #1a1e4a;
+    --footer-bg: linear-gradient(180deg,rgba(26, 30, 74, 1) 0%, rgba(50, 29, 82, 1) 100%);
 
     /* Variables for main hero art and its automatic fallback */
-    --main-img: url(../../images/main.png);
-    --main-img-fallback: url('https://file.garden/ZzX5gcUBcGLpZuFr/main2.png'); 
+    --main-img: url(../../images/main.webp);
+    --main-img-fallback: url('https://res.cloudinary.com/dcmvh3uii/image/upload/main_nhcelf.png'); 
+
 }
 
 body {
@@ -53,7 +56,7 @@ body::before {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     
     /* Adjust this to make it more or less visible (0.02 to 0.08 is usually the sweet spot) */
-    opacity: 0.1; 
+    opacity: 0.2; 
     
     /* CRITICAL: This ensures the texture doesn't block any clicks, drags, or hovers */
     pointer-events: none; 
@@ -102,14 +105,34 @@ img {
 }
 
 .burger-btn svg {
+    position: absolute;
     width: 28px;
     height: 28px;
-    fill: currentColor;
+    fill: none;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
 }
 
-.icon-close { display: none; }
-body.menu-open .icon-burger { display: none; }
-body.menu-open .icon-close { display: block; }
+/* Default State (Menu Closed) */
+.icon-burger {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.icon-close {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5); /* Shrink and rotate away */
+}
+
+/* Active State (Menu Open) */
+body.menu-open .icon-burger {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5); /* Spin and fade out */
+}
+
+body.menu-open .icon-close {
+    opacity: 1;
+    transform: rotate(0deg) scale(1); /* Spin in and grow to full size */
+}
 
 /* Backdrop Overlay */
 .menu-backdrop {
@@ -137,16 +160,18 @@ body.menu-open .menu-backdrop {
     height: 98%;
     border-radius: 0.5rem;
     background-color: var(--nav-bg);
-    /* background: radial-gradient(circle,rgba(51, 57, 119, 1) 0%, rgba(66, 54, 125, 1) 100%); */
     color: white;
     display: flex;
     flex-direction: column;
     padding: 3rem 3rem;
     z-index: 90;
     box-shadow: 5px 0 15px rgba(0,0,0,0.2);
-    transform: translateX(0);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    
+    /* Morph Animation Base */
+    /* Center point (35px) aligns perfectly with the absolute center of your burger button */
+    clip-path: circle(150% at 35px 35px); 
+    transition: clip-path 0.6s cubic-bezier(0.7, 0, 0.2, 1);
 }
 
 /* Logo Space */
@@ -191,6 +216,35 @@ body.menu-open .menu-backdrop {
     width: fit-content;
     z-index: 1; /* Establishes stacking context for pseudo-elements */
 }
+
+/* --- STAGGERED NAV REVEAL --- */
+.nav-links li {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 1. Visible when burger menu is explicitly opened */
+body.menu-open .nav-links li {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 2. Visible by default on desktop when at the top of the page */
+@media (min-width: 993px) {
+    body:not(.is-scrolled) .nav-links li {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0s !important; /* No delay needed when the page first loads */
+    }
+}
+
+/* The Waterfall Delays (Only applies when toggling the menu) */
+body.menu-open .nav-links li:nth-child(1) { transition-delay: 0.15s; }
+body.menu-open .nav-links li:nth-child(2) { transition-delay: 0.20s; }
+body.menu-open .nav-links li:nth-child(3) { transition-delay: 0.25s; }
+body.menu-open .nav-links li:nth-child(4) { transition-delay: 0.30s; }
+body.menu-open .nav-links li:nth-child(5) { transition-delay: 0.35s; }
 
 .nav-links a::before {
     content: "";
@@ -260,7 +314,7 @@ body.menu-open .menu-backdrop {
     border: 5px solid var(--social-color2);
     background-color: var(--social-color2);
     color: var(--nav-bg);
-    transform: translateY(-4px);
+    /* transform: translateY(-4px);*/
 }
 
 /* Back to Top Button Integration */
@@ -433,7 +487,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     font-weight: 900;
     text-transform: uppercase;
     line-height: 1;
-    color: transparent;
+    color: #ffffff23;
     -webkit-text-stroke: 6px #ebf6fd;
     display: inline-block;
     vertical-align: bottom;
@@ -441,21 +495,27 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     overflow: hidden;
 }
 
-/* Typewriter Class */
-.typewriter{
-    border-right: 3px solid rgba(255,255,255,.75);
-    animation: typewriter 1s steps(8) 4s 1 normal both,
-             blinkTextCursor 500ms steps(8) 4s infinite normal;
-}
-@keyframes typewriter{
-    from{width: 0;}
-    to{width: 9ch;}
-}
-@keyframes blinkTextCursor{
-    from{border-right-color: rgba(255,255,255,.75);}
-    to{border-right-color: transparent;}
+/* Typewriter Base Class - Hidden until JS triggers it */
+.typewriter {
+    width: 0; /* Keeps text completely hidden initially */
+    border-right: 3px solid transparent; 
 }
 
+/* The trigger class added by JavaScript */
+.typewriter.is-typing {
+    /* Notice the 4s delays are changed to 0s */
+    animation: typewriter 1s steps(8) 0s 1 normal both,
+               blinkTextCursor 500ms steps(8) 0s infinite normal;
+}
+
+@keyframes typewriter {
+    from { width: 0; }
+    to { width: 9ch; }
+}
+@keyframes blinkTextCursor {
+    from { border-right-color: rgba(255,255,255,.75); }
+    to { border-right-color: transparent; }
+}
 /* Purple Box */
 .scroll-indicator {
     position: absolute;
@@ -586,6 +646,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     z-index: 0;
     user-select: none;
     white-space: nowrap;
+    
 }
 
 /* Wrapper ensuring the Arrow stays locked to the vertical center of the track itself */
@@ -742,6 +803,19 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 .see-more-link svg {
     width: 24px;
     height: 24px;
+}
+
+/* --- SCROLL FADE-UP ANIMATION --- */
+.reveal-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+.reveal-up.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* --- ABOUT / PROFILE AREA --- */
@@ -925,6 +999,11 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     /* Firefox scrollbar styling */
     scrollbar-width: thin;
     scrollbar-color: var(--hl-color) rgba(255, 255, 255, 0.05);
+
+    overscroll-behavior: contain; /* Traps momentum, stops bleed to parent */
+    scroll-behavior: auto; /* Ensures native snap-back */
+    contain: layout style paint; /* Isolates layout shifts from Lenis transforms */
+    will-change: transform; /* GPU acceleration for smooth native scroll */
 }
 
 /* UX Cue 2: Custom Webkit Scrollbar */
@@ -1073,7 +1152,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 .contact-area {
     min-height: 70vh;
     height: 70vh;
-    background-color: #1a1e4a;
+    background-color: var(--contact-bg);
     background-image: repeating-linear-gradient(128deg, #ffffff0e, #ffffff0e 1px, transparent 1px, transparent 16px);
     color: white;
     padding: 5rem 2rem;
@@ -1161,8 +1240,8 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 }
 
 .footer {
-    background: #1A1E4A;
-    background: linear-gradient(180deg,rgba(26, 30, 74, 1) 0%, rgba(50, 29, 82, 1) 100%);
+    background: var(--contact-bg);
+    background: var(--footer-bg);
     color: #d8d8d8;
     text-align: center;
     padding: 2rem;
@@ -1259,7 +1338,9 @@ body.is-scrolled:not(.menu-open) .back-to-top {
 
 /* --- INTERACTIVE STATES --- */
 body.is-scrolled .sidebar {
-    transform: translateX(-105%);
+    /* Shrink the sidebar invisibly into the center of the burger button */
+    clip-path: circle(0px at 35px 35px);
+    pointer-events: none; /* Prevents invisible links from being clicked */
 }
 
 body.is-scrolled .landing-wrapper {
@@ -1271,11 +1352,16 @@ body.is-scrolled .burger-btn {
 }
 
 body.menu-open .sidebar {
-    transform: translateX(0) !important;
+    /* Burst outwards to reveal the menu */
+    clip-path: circle(150% at 35px 35px) !important;
+    pointer-events: auto !important;
 }
 
 body.menu-open .burger-btn {
     display: flex; 
+    /* Blend the button seamlessly into the expanded sidebar background */
+    background-color: transparent;
+    box-shadow: none; 
 }
 
 
@@ -1285,7 +1371,9 @@ body.menu-open .burger-btn {
     .burger-btn { display: flex; }
     
     .sidebar {
-        transform: translateX(-105%);
+        /* Hidden by default on mobile using the morph center */
+        clip-path: circle(0px at 35px 35px);
+        pointer-events: none;
         padding-top: 100px;
     }
 
@@ -1365,21 +1453,28 @@ body.menu-open .burger-btn {
         -webkit-text-stroke: 3px #ebf6fd; /* Thinner stroke for better legibility stacked */
     }
 
-    .typewriter{
-    border-right: 0px;
-    border-bottom: 3px solid rgba(255,255,255,.75);
-    animation: typewriterMobile 1s steps(8) 4s 1 normal both,
-            blinkTextCursorMobile 500ms steps(8) 4s infinite normal;
-}
-    @keyframes typewriterMobile{
-    from{height: 0;}
-    to{height: 7.4em;}
-}
-    @keyframes blinkTextCursorMobile{
-    from{border-bottom-color: rgba(255,255,255,.75);}
-    to{border-bottom-color: transparent;}
-}
-    
+/* Mobile Typewriter Override */
+    .typewriter {
+        width: auto; /* Reset desktop width */
+        height: 0; /* Hide vertically instead */
+        border-right: 0px;
+        border-bottom: 3px solid transparent;
+    }
+
+    .typewriter.is-typing {
+        animation: typewriterMobile 1s steps(8) 0s 1 normal both,
+                   blinkTextCursorMobile 500ms steps(8) 0s infinite normal;
+    }
+
+    @keyframes typewriterMobile {
+        from { height: 0; }
+        to { height: 7.4em; }
+    }
+    @keyframes blinkTextCursorMobile {
+        from { border-bottom-color: rgba(255,255,255,.75); }
+        to { border-bottom-color: transparent; }
+    }
+
     .layer-red { 
         width: 140vw; /* Scales it back up beautifully without risking off-center bugs */
         height: 85vh; 
@@ -1440,6 +1535,11 @@ body.menu-open .burger-btn {
     .timeline-wrapper {
         min-height: 350px; 
         margin-top: 2rem;
+    }
+
+    .timeline-container {
+        min-height: auto;
+        overflow: visible;
     }
 
     .timeline-scroll-hint{
