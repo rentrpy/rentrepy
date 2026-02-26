@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = document.querySelector(targetHref);
             if (target) {
                 lenis.scrollTo(target, {
-                    offset: -80,
+                    //offset: -80,
                     duration: 1.2
                 });
             }
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = document.querySelector(targetHref);
         if (target) {
             lenis.scrollTo(target, {
-                offset: -80,
+                //offset: -80,
                 duration: 1.2
             });
         }
@@ -658,6 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 7. ABOUT SCROLL MARQUEE LOGIC
+    
     // a. Grab all elements once at the top
     const aboutMarquee = document.getElementById('aboutMarquee');
     const profileSection = document.getElementById('profile');
@@ -688,17 +689,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // c. Attach a SINGLE scroll event listener
-    window.addEventListener('scroll', () => {
-    
-    // Process About Marquee (Multiplier: 0.5)
-    if (aboutMarquee && profileSection) {
-        updateMarquees(profileSection, [aboutMarquee], 0.5);
-    }
+    let ticking = false;
 
-    // Process Contact Marquees (Multiplier: -0.5)
-    if (contactSection && (contactMarquee || contactMarquee2)) {
-        updateMarquees(contactSection, [contactMarquee, contactMarquee2], -0.5);
-    }   
+    window.addEventListener('scroll', () => {
+    if (!ticking) {
+        window.requestAnimationFrame(() => {
+
+        if (aboutMarquee && profileSection) {
+            updateMarquees(profileSection, [aboutMarquee], 0.5);
+        }
+
+        if (contactSection && (contactMarquee || contactMarquee2)) {
+            updateMarquees(contactSection, [contactMarquee, contactMarquee2], -0.5);
+        }
+
+        ticking = false;
+        });
+
+        ticking = true;
+    }
     });
 
     // 8. DEFERRED PROFILE CARD FLIP LOGIC

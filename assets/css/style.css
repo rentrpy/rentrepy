@@ -582,10 +582,12 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     display: flex;
     width: fit-content;
     animation: scroll-left 50s linear infinite;
+    contain: paint;
 }
 
 .marquee-content.reverse {
     animation: scroll-right 60s linear infinite;
+    contain: paint;
 }
 
 .marquee-text-group {
@@ -1196,6 +1198,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     will-change: transform;
     pointer-events: none;
     user-select: none;
+    contain: paint;
 }
 
 .contact-scroll-marquee-inverse {
@@ -1213,6 +1216,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     will-change: transform;
     pointer-events: none;
     user-select: none;
+    contain: paint;
 }
 
 .contact-content h2 {
