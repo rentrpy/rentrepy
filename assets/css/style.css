@@ -28,6 +28,7 @@ html {
     --social-color: #ec4895;
     --social-color2: #5fc7ff;
     --contact-bg: #1a1e4a;
+    --archive-bg: #1f2135;
     --footer-bg: linear-gradient(180deg,rgba(26, 30, 74, 1) 0%, rgba(50, 29, 82, 1) 100%);
 
     /* Variables for main hero art and its automatic fallback */
@@ -167,6 +168,13 @@ body.menu-open .menu-backdrop {
     z-index: 90;
     box-shadow: 5px 0 15px rgba(0,0,0,0.2);
     overflow-y: auto;
+
+    /* Hardware Acceleration Fixes for iOS */
+    -webkit-transform: translateZ(0); /* Forces GPU rendering */
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden; /* Smooths jagged clipping edges on Safari */
+    backface-visibility: hidden;
+    will-change: clip-path;
     
     /* Morph Animation Base */
     /* Center point (35px) aligns perfectly with the absolute center of your burger button */
@@ -235,7 +243,7 @@ body.menu-open .nav-links li {
     body:not(.is-scrolled) .nav-links li {
         opacity: 1;
         transform: translateY(0);
-        transition-delay: 0s !important; /* No delay needed when the page first loads */
+        transition-delay: 0s; /* !important (removed) No delay needed when the page first loads */
     }
 }
 
@@ -311,9 +319,10 @@ body.menu-open .nav-links li:nth-child(5) { transition-delay: 0.35s; }
 }
 
 .social-btn:hover {
-    border: 5px solid var(--social-color2);
-    background-color: var(--social-color2);
-    color: var(--nav-bg);
+    border: 5px solid var(--social-color);
+    background-color: var(--social-color);
+    box-shadow: 0 4px 15px rgba(236, 72, 149, 0.4);
+    color: white;
     /* transform: translateY(-4px);*/
 }
 
@@ -699,12 +708,13 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     height: 100%;
     object-fit: cover;
     pointer-events: none; /* Prevents ghost dragging the image natively */
+    transform: scale(1.08); /* zoom out by 8% */
     transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
     transform-origin: center;
 }
 
 .slider-item:hover img {
-    transform: scale(1.1); /* 90% = zoom out by 10% */
+    transform: scale(1); 
 }
 
 /* NEXT ARROW (Desktop Only) */
@@ -752,7 +762,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     color: var(--nav-bg);
     text-decoration: none;
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 2px;
     padding: 0.5em 1em;
@@ -1357,8 +1367,8 @@ body.is-scrolled .burger-btn {
 
 body.menu-open .sidebar {
     /* Burst outwards to reveal the menu */
-    clip-path: circle(150% at 35px 35px) !important;
-    pointer-events: auto !important;
+    clip-path: circle(150vh at 35px 35px);
+    pointer-events: auto;
 }
 
 body.menu-open .burger-btn {
@@ -1553,4 +1563,439 @@ body.menu-open .burger-btn {
     .logo-bottom-img {
     height: 60%; 
 }
+}
+
+/* --- VIRTUAL PAGE SYSTEM --- */
+.virtual-page {
+    position: absolute; /* Changed from fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 3rem 3rem;
+    min-height: 100vh;
+    background-color: white;
+    z-index: 9999; 
+    opacity: 0;
+    visibility: hidden; /* Cleaner than pointer-events for absolute elements */
+    transition: opacity 0.4s ease, visibility 0.4s;
+    /* Removed overflow-y and overscroll-behavior. The window handles it now! */
+}
+
+.virtual-page.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Pauses the infinite CSS marquees in the background when the virtual page is open */
+body.pause-marquees .marquee-content {
+    animation-play-state: paused !important;
+}
+
+/* Close Button */
+.virtual-close {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 10000;
+}
+
+.virtual-close:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.virtual-close svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* --- VIRTUAL PAGE DARK MODE BUTTON --- */
+.virtual-dark-mode {
+    position: fixed;
+    top: 95px; /* Sits exactly 10px below the close button (30px top + 50px height + 10px gap) */
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 10000;
+}
+
+.virtual-dark-mode:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.virtual-dark-mode svg {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+}
+
+/* Default State (Light Mode) */
+.icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+.icon-sun {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5); /* Shrunk and rotated away */
+}
+
+/* Active State (Dark Mode) */
+.virtual-page.is-dark .icon-moon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5); /* Spins and fades out */
+}
+.virtual-page.is-dark .icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1); /* Spins in and grows */
+}
+
+/* --- VIRTUAL PAGE DARK MODE OVERRIDES --- */
+.virtual-page.is-dark {
+    background-color: var(--archive-bg); 
+}
+
+.virtual-page.is-dark .page-title {
+    color: var(--bg-color)
+}
+
+.virtual-page.is-dark .month-sidebar span {
+    color: #f1f1f1;
+}
+
+.virtual-page.is-dark .filter-btn {
+    color: #f1f1f1;
+    border-color: var(--hl-color);
+}
+
+/*  Dark Mode Active State */
+.virtual-page.is-dark .filter-btn.active {
+    background: var(--hl-color);
+    color: white;
+}
+
+/*  Dark Mode Hover State (Inactive) */
+.virtual-page.is-dark .filter-btn:not(.active):hover {
+    background: rgba(236, 72, 149, 0.25); /* Slightly stronger pink wash against the dark background */
+    color: #f1f1f1; 
+}
+
+.virtual-page.is-dark .bento-container {
+    /* Swaps the black diagonal lines for subtle white lines */
+    background-image: repeating-linear-gradient(128deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px);
+}
+
+.virtual-page.is-dark .no-results-message {
+    color: #f1f1f1;
+}
+
+/* --- BENTO GALLERY PAGE --- */
+/* THE BREAKOUT TRICK: Forces background edge-to-edge without moving content */
+.bento-container {
+    position: relative;
+    width: 100vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4rem 0; /* Extends the diagonal pattern top and bottom */
+    margin: 2rem 0;
+    background-image: repeating-linear-gradient(128deg, #0000001f, #0000001f 1px, transparent 1px, transparent 16px);
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--nav-bg);
+}
+
+/* Filter Buttons */
+.gallery-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4rem;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 2px solid var(--hl-color);
+    color: var(--nav-bg);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Active State - Bold, Solid Fill */
+.filter-btn.active {
+    background: var(--hl-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(236, 72, 149, 0.4);
+}
+
+/* Hover State (Inactive) - Soft Ghost Tint */
+.filter-btn:not(.active):hover {
+    background: rgba(236, 72, 149, 0.12); /* A very subtle pink wash */
+    color: var(--hl-color); /* Keeps the text pink instead of white */
+    transform: translateY(-2px);
+}
+
+/* Timeline Layout */
+.bento-timeline {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem; /* Re-aligns grid to match the title above it */
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+}
+
+/* --- NESTED STICKY TIMELINE LAYOUT --- */
+.timeline-year-group {
+    display: flex;
+    gap: 1.5rem; 
+    align-items: flex-start; /* Crucial: stops the sidebar from stretching, allowing it to stick */
+}
+
+/* The Year (Stays pinned until the whole year is over) */
+.timeline-year-sidebar {
+    width: 120px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+    text-align: right;
+    border-right: 3px solid var(--hl-color);
+    padding-right: 1.5rem;
+    z-index: 10;
+}
+
+.timeline-year-sidebar h3 {
+    font-size: 2.5rem;
+    color: var(--hl-color);
+    line-height: 1;
+    margin: 0;
+}
+
+.timeline-year-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+}
+
+/* The Month (Slides up alongside the year) */
+.timeline-month-section {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.month-sidebar {
+    width: 100px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px; 
+    text-align: left;
+    z-index: 9;
+}
+
+.month-sidebar span {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--nav-bg);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding-top: 12px; /* Visually aligns the text baseline with the 2026 text */
+}
+
+/* Hidden State for JS Filtering */
+.timeline-year-group.is-hidden { display: none; }
+
+/* The Dense Bento Grid */
+.bento-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 220px);
+    grid-auto-rows: 220px;
+    gap: 15px;
+    grid-auto-flow: dense; 
+    justify-content: center; 
+}
+
+/* Bento Item Styling */
+/* Bento Item Styling */
+.bento-item {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    /* Removed the static background placeholder */
+    transform-origin: center;
+    animation: popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    
+    /* Hardware acceleration for the parent */
+    -webkit-transform: translateZ(0); 
+    transform: translateZ(0);
+}
+
+/* THE GPU SKELETON PULSE */
+.bento-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.08); /* Subtle white works beautifully on dark mode */
+    z-index: 0;
+    will-change: opacity; /* Tells the GPU to handle this exclusively */
+    animation: skeletonPulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes skeletonPulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* THE KILL SWITCH: Completely destroys the animation to save battery */
+.bento-item.is-loaded::before {
+    content: none; 
+    animation: none;
+}
+
+.bento-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    transform: scale(1.08);
+    z-index: 1;
+    opacity: 0; /* Hide the image while it downloads */
+    /* Add opacity to your existing transition so it fades in smoothly */
+    transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.4s ease;
+}
+
+/* Fade the image in once it is fully downloaded */
+.bento-item.is-loaded img {
+    opacity: 1;
+}
+
+.bento-item:hover img {
+    transform: scale(1);
+}
+
+/* Structural Bento Spans */
+.span-2-col { grid-column: span 2; }
+.span-2-row { grid-row: span 2; }
+
+/* Filter Hidden State */
+.bento-item.is-hidden { display: none; }
+.timeline-month-section.is-hidden { display: none; }
+
+/* --- BENTO GALLERY EMPTY STATE --- */
+.no-results-message {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem;
+    color: var(--nav-bg);
+    animation: popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.no-results-message.is-active {
+    display: flex; /* Shown when JavaScript adds the class */
+}
+
+.no-results-message svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.no-results-message h3 {
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.no-results-message p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsiveness for bento*/
+@media (max-width: 768px) {
+    .bento-timeline {
+        padding: 0 1.5rem; /* Matches mobile padding */
+    }
+    
+    .timeline-year-group {
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    .timeline-year-sidebar {
+        width: 100%;
+        position: static;
+        text-align: left;
+        border-right: none;
+        border-bottom: 3px solid var(--hl-color);
+        padding-right: 0;
+        padding-bottom: 0.5rem;
+    }
+    .timeline-year-content {
+        gap: 3rem;
+    }
+    .timeline-month-section {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .month-sidebar {
+        width: 100%;
+        position: static;
+    }
+    .month-sidebar span {
+        padding-top: 0;
+    }
+
+    .bento-grid {
+        grid-template-columns: repeat(auto-fill, 160px);
+        grid-auto-rows: 160px;
+        justify-content: center;
+    }
 }

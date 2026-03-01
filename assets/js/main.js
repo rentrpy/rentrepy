@@ -447,8 +447,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // 4. SCROLL LOGIC
+// 4. SCROLL LOGIC
     const handleScroll = () => {
+        // Ignore scroll events if the virtual page overlay is open
+        if (document.querySelector('.virtual-page.is-active')) return;
+
         if (!landingSection) return;
         
         const triggerHeight = landingSection.offsetHeight * 0.7; 
@@ -507,6 +510,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function sliderLoop() {
+
+            //  Queue the next frame immediately so the loop doesn't permanently die when paused
+            animationId = requestAnimationFrame(sliderLoop);
+
+            //  Completely freeze the math and DOM updates if the archive is open
+            if (document.body.classList.contains('pause-marquees')) return;
+
             // Naturally move forward if we aren't hovering or touching
             // a. Calculate the new speed (The Lerp formula)
             // If not dragging and not clicking, smoothly glide the current speed toward the target speed
@@ -529,8 +539,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isClickAnimating) {
                 sliderTrack.style.transform = `translateX(${slideCurrentX}px)`;
             }
-            
-            animationId = requestAnimationFrame(sliderLoop);
         }
         
         // Kick off the loop
@@ -688,27 +696,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // c. Attach a SINGLE scroll event listener
+// c. Attach a SINGLE scroll event listener
     let ticking = false;
 
     window.addEventListener('scroll', () => {
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                
+                // THE TWEAK: Freeze the marquees ONLY when this delayed class is active
+                if (document.body.classList.contains('pause-marquees')) {
+                    ticking = false;
+                    return;
+                }
 
-        if (aboutMarquee && profileSection) {
-            updateMarquees(profileSection, [aboutMarquee], 0.5);
+                if (aboutMarquee && profileSection) {
+                    updateMarquees(profileSection, [aboutMarquee], 0.5);
+                }
+
+                if (contactSection && (contactMarquee || contactMarquee2)) {
+                    updateMarquees(contactSection, [contactMarquee, contactMarquee2], -0.5);
+                }
+
+                ticking = false;
+            });
+
+            ticking = true;
         }
-
-        if (contactSection && (contactMarquee || contactMarquee2)) {
-            updateMarquees(contactSection, [contactMarquee, contactMarquee2], -0.5);
-        }
-
-        ticking = false;
-        });
-
-        ticking = true;
-    }
     });
+
 
     // 8. DEFERRED PROFILE CARD FLIP LOGIC
     const profileCard = document.getElementById('profileCard');
@@ -852,5 +867,302 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     revealElements.forEach(el => revealObserver.observe(el));
+
+// 14. VIRTUAL PAGE LOGIC (Carrd-style Routing)
+    const virtualLinks = document.querySelectorAll('.see-more-link');
+    const virtualPages = document.querySelectorAll('.virtual-page');
+    const virtualCloses = document.querySelectorAll('.virtual-close');
+    const siteWrapper = document.querySelector('.site-wrapper');
+    let savedScrollPos = 0; // Remembers where you were on the main site
+    let marqueeTimer; // Timer to control the 500ms pause delay
+
+    // --- IMAGE LAZY LOADER (WITH SKELETON KILL-SWITCH) ---
+    const lazyImageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.hasAttribute('data-src')) {
+                    img.src = img.getAttribute('data-src'); 
+                    img.removeAttribute('data-src'); 
+
+                    // NEW: Wait for the image to physically finish downloading
+                    img.onload = () => {
+                        // Find the parent bento box and apply the kill switch class
+                        const parentBox = img.closest('.bento-item');
+                        if (parentBox) {
+                            parentBox.classList.add('is-loaded');
+                        }
+                    };
+
+                    observer.unobserve(img); 
+                }
+            }
+        });
+    }, { 
+        rootMargin: "400px 0px" 
+    });
+
+    // Open Page Logic
+    virtualLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const targetId = link.getAttribute('href').replace('#', '');
+            const targetPage = document.getElementById(targetId);
+
+            if (targetPage) {
+                e.preventDefault(); 
+                
+                if (typeof lenis !== 'undefined') lenis.stop();
+                
+                savedScrollPos = window.scrollY;
+                
+                if (siteWrapper) {
+                    siteWrapper.style.position = 'fixed';
+                    siteWrapper.style.top = `-${savedScrollPos}px`;
+                    siteWrapper.style.width = '100%';
+                }
+
+                targetPage.classList.add('is-active');
+                
+                document.body.offsetHeight;
+                window.scrollTo(0, 0);
+                
+                if (typeof lenis !== 'undefined') {
+                    lenis.scrollTo(0, { immediate: true }); 
+                    lenis.start(); 
+                }
+                
+                // --- Pass images to the Observer instead of loading immediately ---
+                const lazyImages = targetPage.querySelectorAll('img[data-src]');
+                lazyImages.forEach(img => {
+                    lazyImageObserver.observe(img); 
+                });
+
+                // Pause background marquees 500ms after opening
+                clearTimeout(marqueeTimer);
+                marqueeTimer = setTimeout(() => {
+                    document.body.classList.add('pause-marquees');
+                }, 500);
+                
+                history.pushState({ page: targetId }, '', `#${targetId}`);
+            }
+        });
+    });
+
+    // Close Page Logic
+    const closeVirtualPage = () => {
+        virtualPages.forEach(page => page.classList.remove('is-active'));
+
+        // Resume marquees instantly when closing
+        clearTimeout(marqueeTimer);
+        document.body.classList.remove('pause-marquees');
+        
+        // 1. Stop Lenis instantly so the scroll is frozen while fading out
+        if (typeof lenis !== 'undefined') lenis.stop();
+        
+        // Wait for the 0.4s CSS fade-out transition before restoring the background
+        setTimeout(() => {
+            if (siteWrapper) {
+                siteWrapper.style.position = '';
+                siteWrapper.style.top = '';
+                siteWrapper.style.width = '';
+            }
+            
+            // 2. CRITICAL: Force the browser to recalculate the main site's height synchronously. 
+            // If we don't do this, the browser clamps the scroll to the short virtual page's height!
+            document.body.offsetHeight; 
+            
+            // 3. Force the native window back to the exact pixel instantly
+            window.scrollTo(0, savedScrollPos);
+            
+            // 4. Force Lenis to the exact pixel and wake it up
+            if (typeof lenis !== 'undefined') {
+                lenis.scrollTo(savedScrollPos, { immediate: true });
+                lenis.start(); // Restart the smooth scroll math safely!
+            }
+        }, 400);
+    };
+
+    virtualCloses.forEach(btn => {
+        btn.addEventListener('click', () => {
+            closeVirtualPage();
+            history.pushState('', document.title, window.location.pathname); 
+        });
+    });
+
+    // Handle Browser Back/Forward Buttons safely
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.page) {
+            // User went 'forward' into a virtual page
+            const targetPage = document.getElementById(e.state.page);
+            if (targetPage) {
+                if (typeof lenis !== 'undefined') lenis.stop();
+                
+                savedScrollPos = window.scrollY;
+                if (siteWrapper) {
+                    siteWrapper.style.position = 'fixed';
+                    siteWrapper.style.top = `-${savedScrollPos}px`;
+                    siteWrapper.style.width = '100%';
+                }
+                
+                targetPage.classList.add('is-active');
+                
+                document.body.offsetHeight;
+                window.scrollTo(0, 0);
+                
+                if (typeof lenis !== 'undefined') {
+                    lenis.scrollTo(0, { immediate: true });
+                    lenis.start();
+                }
+
+                // Apply the 500ms delay when using the browser's Forward button
+                clearTimeout(marqueeTimer);
+                marqueeTimer = setTimeout(() => {
+                    document.body.classList.add('pause-marquees');
+                }, 500);
+            }
+
+        } else {
+            // User went 'back' to the main site
+            virtualPages.forEach(page => page.classList.remove('is-active'));
+            
+            // Resume instantly when using the browser's Back button
+            clearTimeout(marqueeTimer);
+            document.body.classList.remove('pause-marquees');
+            
+            if (typeof lenis !== 'undefined') lenis.stop();
+            
+            setTimeout(() => {
+                if (siteWrapper) {
+                    siteWrapper.style.position = '';
+                    siteWrapper.style.top = '';
+                    siteWrapper.style.width = '';
+                }
+                
+                document.body.offsetHeight;
+                window.scrollTo(0, savedScrollPos);
+                
+                if (typeof lenis !== 'undefined') {
+                    lenis.scrollTo(savedScrollPos, { immediate: true });
+                    lenis.start(); 
+                }
+            }, 400);
+        }
+    });
+
+// 15. BENTO GALLERY FILTER LOGIC (Multi-Select)
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const bentoItems = document.querySelectorAll('.bento-item');
+    const timelineSections = document.querySelectorAll('.timeline-month-section');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filterValue = btn.getAttribute('data-filter');
+            const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+
+            if (filterValue === 'all') {
+                // Clicked 'All Works' -> Turn off everything else
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            } else {
+                // Clicked a specific tag -> Turn off 'All Works'
+                if (allBtn) allBtn.classList.remove('active');
+                
+                // Toggle the clicked tag
+                btn.classList.toggle('active');
+
+                // If they unselected all tags, automatically default back to 'All Works'
+                const activeFilters = document.querySelectorAll('.filter-btn.active:not([data-filter="all"])');
+                if (activeFilters.length === 0 && allBtn) {
+                    allBtn.classList.add('active');
+                }
+            }
+
+            // Gather an array of strings of all currently active tags
+            const activeTags = Array.from(document.querySelectorAll('.filter-btn.active:not([data-filter="all"])'))
+                                    .map(b => b.getAttribute('data-filter'));
+
+            // Show/Hide items based on tags (AND Logic: Item must have ALL active tags)
+            bentoItems.forEach(item => {
+                const itemTags = item.getAttribute('data-tags') || "";
+                
+                let isMatch = true;
+                if (activeTags.length > 0) {
+                    // isMatch is only true if every single active tag is found in the item's data-tags
+                    isMatch = activeTags.every(tag => itemTags.includes(tag));
+                }
+
+                if (isMatch) {
+                    item.classList.remove('is-hidden');
+                    // Retrigger the popIn animation cleanly
+                    item.style.animation = 'none';
+                    item.offsetHeight; 
+                    item.style.animation = null; 
+                } else {
+                    item.classList.add('is-hidden');
+                }
+            });
+
+            // Cleanup: Hide the entire Month Section if all its items are filtered out
+            let totalVisibleItems = 0; // NEW: Keep track of how many items survived the filter
+
+            timelineSections.forEach(section => {
+                const visibleItems = section.querySelectorAll('.bento-item:not(.is-hidden)');
+                if (visibleItems.length === 0) {
+                    section.classList.add('is-hidden');
+                } else {
+                    section.classList.remove('is-hidden');
+                    totalVisibleItems += visibleItems.length; // Add to our total count
+                }
+            });
+
+            // Hide the entire Year Group if all its months are hidden
+            const yearGroups = document.querySelectorAll('.timeline-year-group');
+            yearGroups.forEach(group => {
+                const visibleMonths = group.querySelectorAll('.timeline-month-section:not(.is-hidden)');
+                if (visibleMonths.length === 0) {
+                    group.classList.add('is-hidden');
+                } else {
+                    group.classList.remove('is-hidden');
+                }
+            });
+
+            // Show or hide the Empty State message
+            const noResultsMsg = document.getElementById('no-results');
+            if (noResultsMsg) {
+                if (totalVisibleItems === 0) {
+                    noResultsMsg.classList.add('is-active');
+                } else {
+                    noResultsMsg.classList.remove('is-active');
+                }
+            }
+        });
+    });
+
+    // 15.5 VIRTUAL PAGE DARK MODE LOGIC
+    const darkModeBtns = document.querySelectorAll('.virtual-dark-mode');
+    darkModeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Find the parent virtual page and toggle the dark mode class
+            const parentPage = btn.closest('.virtual-page');
+            if (parentPage) {
+                parentPage.classList.toggle('is-dark');
+            }
+        });
+    });
+    
+    // 16. ATTACH EXISTING LIGHTBOX TO BENTO ITEMS
+    const bentoGridContainer = document.querySelector('.bento-timeline');
+    if (bentoGridContainer && document.getElementById('lightbox')) {
+        bentoGridContainer.addEventListener('click', (e) => {
+            const clickedItem = e.target.closest('.bento-item');
+            if (clickedItem) {
+                const img = clickedItem.querySelector('img');
+                if (img) {
+                    document.getElementById('lightbox-img').src = img.src;
+                    document.getElementById('lightbox').classList.add('active');
+                }
+            }
+        });
+    }
 
 });
