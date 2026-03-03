@@ -1886,6 +1886,7 @@ body.pause-marquees .marquee-content {
 
 /* Structural Bento Spans */
 .span-2-col { grid-column: span 2; }
+.span-4-col { grid-column: span 4; }
 .span-2-row { grid-row: span 2; }
 
 /* Filter Hidden State */
