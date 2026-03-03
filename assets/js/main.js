@@ -450,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // 4. SCROLL LOGIC
     const handleScroll = () => {
         // Ignore scroll events if the virtual page overlay is open
+
         if (document.querySelector('.virtual-page.is-active')) return;
 
         if (!landingSection) return;
@@ -921,6 +922,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     siteWrapper.style.width = '100%';
                 }
 
+                targetPage.style.display = 'block';
+
                 targetPage.classList.add('is-active');
                 
                 document.body.offsetHeight;
@@ -961,6 +964,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Wait for the 0.4s CSS fade-out transition before restoring the background
         setTimeout(() => {
+            virtualPages.forEach(page => page.style.display = 'none');
+
             if (siteWrapper) {
                 siteWrapper.style.position = '';
                 siteWrapper.style.top = '';
@@ -1052,7 +1057,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // 15. BENTO GALLERY FILTER LOGIC (Multi-Select)
     const filterBtns = document.querySelectorAll('.filter-btn');
     const bentoItems = document.querySelectorAll('.bento-item');
-    const timelineSections = document.querySelectorAll('.timeline-month-section');
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1102,27 +1106,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Cleanup: Hide the entire Month Section if all its items are filtered out
-            let totalVisibleItems = 0; // NEW: Keep track of how many items survived the filter
+            // Cleanup: Recalculate visibility without the month sections
+            let totalVisibleItems = 0; // Keep track of how many items survived the filter
 
-            timelineSections.forEach(section => {
-                const visibleItems = section.querySelectorAll('.bento-item:not(.is-hidden)');
-                if (visibleItems.length === 0) {
-                    section.classList.add('is-hidden');
-                } else {
-                    section.classList.remove('is-hidden');
-                    totalVisibleItems += visibleItems.length; // Add to our total count
-                }
-            });
-
-            // Hide the entire Year Group if all its months are hidden
+            // Hide the entire Year Group if all its items are filtered out
             const yearGroups = document.querySelectorAll('.timeline-year-group');
             yearGroups.forEach(group => {
-                const visibleMonths = group.querySelectorAll('.timeline-month-section:not(.is-hidden)');
-                if (visibleMonths.length === 0) {
+                // Look directly for visible bento items inside the year group
+                const visibleItems = group.querySelectorAll('.bento-item:not(.is-hidden)');
+
+                if (visibleItems.length === 0) {
                     group.classList.add('is-hidden');
                 } else {
                     group.classList.remove('is-hidden');
+                    totalVisibleItems += visibleItems.length; // Count surviving items
                 }
             });
 

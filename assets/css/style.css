@@ -42,6 +42,7 @@ body {
     font-family: 'CustomFont', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
     overflow-x: hidden;
+    overscroll-behavior-y: none; /* <-- disable mobile overscroll */
 }
 
 /* --- GLOBAL SUBTLE PAPER/NOISE TEXTURE --- */
@@ -1579,6 +1580,7 @@ body.menu-open .burger-btn {
     visibility: hidden; /* Cleaner than pointer-events for absolute elements */
     transition: opacity 0.4s ease, visibility 0.4s;
     /* Removed overflow-y and overscroll-behavior. The window handles it now! */
+    display: none;
 }
 
 .virtual-page.is-active {
@@ -1682,9 +1684,6 @@ body.pause-marquees .marquee-content {
     color: var(--bg-color)
 }
 
-.virtual-page.is-dark .month-sidebar span {
-    color: #f1f1f1;
-}
 
 .virtual-page.is-dark .filter-btn {
     color: #f1f1f1;
@@ -1811,31 +1810,6 @@ body.pause-marquees .marquee-content {
     gap: 5rem;
 }
 
-/* The Month (Slides up alongside the year) */
-.timeline-month-section {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-}
-
-.month-sidebar {
-    width: 100px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 100px; 
-    text-align: left;
-    z-index: 9;
-}
-
-.month-sidebar span {
-    display: block;
-    font-size: 1.1rem;
-    color: var(--nav-bg);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    padding-top: 12px; /* Visually aligns the text baseline with the 2026 text */
-}
 
 /* Hidden State for JS Filtering */
 .timeline-year-group.is-hidden { display: none; }
@@ -1916,7 +1890,6 @@ body.pause-marquees .marquee-content {
 
 /* Filter Hidden State */
 .bento-item.is-hidden { display: none; }
-.timeline-month-section.is-hidden { display: none; }
 
 /* --- BENTO GALLERY EMPTY STATE --- */
 .no-results-message {
@@ -1960,6 +1933,40 @@ body.pause-marquees .marquee-content {
 
 /* Mobile Responsiveness for bento*/
 @media (max-width: 768px) {
+
+    /* 1. Push the page title and filter tags down so they don't underlap the buttons */
+    .virtual-page {
+        padding: 2rem 1.5rem; 
+        padding-top: 90px; /* Safely clears the space taken up by the buttons */
+    }
+
+    /* 2. Shrink the Close button and pull it closer to the edge */
+    .virtual-close {
+        top: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
+
+    /* 3. Shrink the Dark Mode button and adjust its gap */
+    .virtual-dark-mode {
+        top: 20px; 
+        right: 75px; /* 20px right + 45px height + 10px gap */
+        width: 45px;
+        height: 45px;
+    }
+
+    /* 4. Scale down the SVG icons inside the buttons */
+    .virtual-close svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .virtual-dark-mode svg {
+        width: 20px; /* The dark mode SVG was naturally smaller than the close SVG */
+        height: 20px;
+    }
+
     .bento-timeline {
         padding: 0 1.5rem; /* Matches mobile padding */
     }
@@ -1980,17 +1987,6 @@ body.pause-marquees .marquee-content {
     }
     .timeline-year-content {
         gap: 3rem;
-    }
-    .timeline-month-section {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    .month-sidebar {
-        width: 100%;
-        position: static;
-    }
-    .month-sidebar span {
-        padding-top: 0;
     }
 
     .bento-grid {
