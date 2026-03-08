@@ -1,0 +1,2403 @@
+/* --- CUSTOM FONT INTEGRATION --- */
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Thin.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Extra-light.ttf') format('truetype');
+    font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Semi-bold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Extra-bold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('../fonts/Black.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+}
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    /* Removes default blue tap highlight globally */
+}
+
+html {
+    scroll-behavior: auto;
+    /* Gives a nice glide effect when clicking nav links */
+    scrollbar-gutter: stable;
+    /* Prevent scrollbar from shifting elements */
+    scrollbar-width: thin;
+    scrollbar-color: var(--hl-color) var(--nav-bg);
+    /* Firefox native scrollbar color theming */
+}
+
+:root {
+    --bg-color: #fde047;
+    --hl-color: #ec4895;
+    --nav-bg: #333977;
+    --social-color: #ec4895;
+    --social-color2: #5fc7ff;
+    --contact-bg: #1a1e4a;
+    --archive-bg: #1f2135;
+    --footer-bg: linear-gradient(180deg, rgba(26, 30, 74, 1) 0%, rgba(50, 29, 82, 1) 100%);
+
+    /* Variables for main hero art and its automatic fallback */
+    --main-img: url(../../images/main.webp);
+    --main-img-fallback: url('https://res.cloudinary.com/dcmvh3uii/image/upload/main_nhcelf.png');
+
+}
+
+body {
+    /* Set CustomFont as priority so Baybayin renders, falling back to Inter/System fonts if needed */
+    font-family: 'CustomFont', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- GLOBAL SUBTLE PAPER/NOISE TEXTURE --- */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* SVG noise texture */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 9998;
+    mix-blend-mode: overlay;
+}
+
+/* Disables saving, phantom dragging, and context menus globally */
+img {
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+}
+
+/* --- NAVIGATION & SIDEBAR --- */
+
+/* Burger Toggle Button */
+.burger-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    z-index: 100;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.burger-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.burger-btn svg {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    fill: none;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+}
+
+/* Default State (Menu Closed) */
+.icon-burger {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.icon-close {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+    /* Shrink and rotate away */
+}
+
+/* Active State (Menu Open) */
+body.menu-open .icon-burger {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+    /* Spin and fade out */
+}
+
+body.menu-open .icon-close {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    /* Spin in and grow to full size */
+}
+
+/* Backdrop Overlay */
+.menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 80;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    will-change: opacity, backdrop-filter;
+}
+
+body.menu-open .menu-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Sidebar Base */
+.sidebar {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 270px;
+    height: calc(100% - 30px);
+    border-radius: 1rem;
+    background-color: var(--nav-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 3rem 3rem;
+    z-index: 90;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+    border: 2px solid rgba(255, 255, 255, 0.05);
+
+
+    /* Hardware Acceleration Fixes for iOS */
+    -webkit-transform: translateZ(0);
+    /* Forces GPU rendering */
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    /* Smooths jagged clipping edges on Safari */
+    backface-visibility: hidden;
+
+    contain: strict;
+    will-change: clip-path;
+
+    /* Morph Animation Base */
+    /* Center point (35px) aligns perfectly with the absolute center of your burger button */
+    -webkit-clip-path: circle(150% at 35px 35px);
+    clip-path: circle(150% at 35px 35px);
+    transition: clip-path 0.5s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Logo Space */
+.logo-container {
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 70px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.logo-img {
+    max-width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+    user-select: none;
+}
+
+/* Custom Uiverse Hover Effect */
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5em 0.5em;
+    /* Gives space for the fill */
+    margin-left: -1em;
+    /* Offsets padding so text remains cleanly aligned left */
+    position: relative;
+    transition: 0.3s ease;
+    cursor: pointer;
+    width: fit-content;
+    z-index: 1;
+    display: block;
+    /* Required for transform to work on <a> tags */
+}
+
+/* --- STAGGERED NAV REVEAL --- */
+.nav-links li {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 1. Visible when burger menu is explicitly opened */
+body.menu-open .nav-links li {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 2. Visible by default on desktop when at the top of the page */
+@media (min-width: 993px) {
+    body:not(.is-scrolled) .nav-links li {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0s;
+        /* !important (removed) No delay needed when the page first loads */
+    }
+}
+
+/* The Waterfall Delays (Only applies when toggling the menu) */
+body.menu-open .nav-links li:nth-child(1) {
+    transition-delay: 0.15s;
+}
+
+body.menu-open .nav-links li:nth-child(2) {
+    transition-delay: 0.20s;
+}
+
+body.menu-open .nav-links li:nth-child(3) {
+    transition-delay: 0.25s;
+}
+
+body.menu-open .nav-links li:nth-child(4) {
+    transition-delay: 0.30s;
+}
+
+body.menu-open .nav-links li:nth-child(5) {
+    transition-delay: 0.35s;
+}
+
+.nav-links a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background-color: var(--hl-color);
+    /* Underline uses highlight color */
+    transition: 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: white;
+    /* Removed transition-delay: 0.3s so the slide happens instantly, while the color can use specific transition if needed */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease 0.3s, text-shadow 0.3s ease;
+    transform: translateX(8px);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.nav-links a:hover::before {
+    width: 100%;
+}
+
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 0;
+    width: 100%;
+    background-color: var(--hl-color);
+    /* Expanding fill uses highlight color */
+    transition: 0.3s ease;
+    z-index: -1;
+    /* Pushes fill cleanly behind text */
+}
+
+.nav-links a:hover::after {
+    height: 100%;
+    transition-delay: 0.4s;
+}
+
+/* Social Links */
+.social-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.social-btn {
+    width: 50px;
+    height: 50px;
+    border: 2px solid var(--social-color);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--social-color);
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
+    /* The Native Gradient Fill */
+    background: transparent;
+    background-image: linear-gradient(var(--social-color), var(--social-color));
+    background-size: 100% 0%;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    transition: all 0.3s ease;
+}
+
+.social-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.social-btn:hover {
+    color: white;
+    border: 3px solid var(--social-color);
+    background-size: 120% 120%;
+    /* Instant slide, delayed color change and background fill */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+        color 0.3s ease 0.3s,
+        box-shadow 0.3s ease,
+        background-size 0.3s ease 0.4s;
+    transform: translateY(-8px);
+    box-shadow: 0 0 15px rgba(236, 72, 149, 0.5);
+}
+
+/* Back to Top Button Integration */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--nav-bg);
+    /* Matches your site theme */
+    border: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: opacity 0.4s ease, transform 0.4s ease, width 0.3s ease;
+
+    overflow: hidden;
+    z-index: 70;
+    /* Below the sidebar/burger, above content */
+
+    /* Hidden by default */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+}
+
+/* Visibility Logic: Show when scrolled AND menu is NOT open */
+body.is-scrolled:not(.menu-open) .back-to-top {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.svgIcon {
+    width: 14px;
+    transition-duration: 0.3s;
+}
+
+.svgIcon path {
+    fill: white;
+}
+
+/* DESKTOP ONLY: Expansion animation */
+@media (hover: hover) {
+    .back-to-top:hover {
+        width: 140px;
+        border-radius: 50px;
+        background-color: var(--hl-color);
+    }
+
+    .back-to-top:hover .svgIcon {
+        transform: translateY(-200%);
+    }
+
+    .back-to-top::before {
+        position: absolute;
+        bottom: -20px;
+        content: "Back to Top";
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0px;
+        white-space: nowrap;
+    }
+
+    .back-to-top:hover::before {
+        font-size: 13px;
+        opacity: 1;
+        bottom: unset;
+        transition: 0.3s ease;
+    }
+}
+
+
+/* --- LANDING AREA --- */
+.landing-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background-color: var(--bg-color);
+    background-image: repeating-linear-gradient(128deg, #ffffff27, #ffffff27 2px, transparent 2px, transparent 16px);
+    position: relative;
+    overflow: hidden;
+    padding-left: 300px;
+    transition: padding-left 0.4s ease;
+    /* Hardware acceleration fix for browser clipping bugs */
+    /* transform: translateZ(0); */
+    isolation: isolate;
+}
+
+.hero-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.parallax-layer {
+    position: absolute;
+    backface-visibility: hidden;
+    will-change: transform;
+    transform: translateZ(0);
+    /* Hardware acceleration hint */
+}
+
+/* Blue Box */
+.layer-blue {
+    width: 70vw;
+    height: 120vh;
+    background-image: var(--main-img);
+    background-size: contain;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    /* border: 4px solid #3b82f6; */
+    z-index: 1;
+    bottom: -5vh;
+    left: 50%;
+    --base-transform: translate(-50%, 0) scale(1.5);
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
+    filter: blur(4px);
+    will-change: transform, filter;
+}
+
+/* Red Box */
+.layer-red {
+    width: 70vw;
+    height: 110vh;
+    background-image: var(--main-img);
+    background-size: contain;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    z-index: 2;
+    bottom: -10vh;
+    left: 45%;
+    --base-transform: translate(-50%, 0);
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
+    transform-origin: bottom center;
+    /* Keeps it anchored to the bottom while breathing */
+    animation: breatheRed 5s ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes breatheRed {
+
+    0%,
+    100% {
+        transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px)) scale(1);
+    }
+
+    50% {
+        /* Subtle 1.5% scale up */
+        transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px)) scale(1.015);
+    }
+}
+
+/* Yellow Box */
+.layer-yellow {
+    z-index: 3;
+    top: 20%;
+    left: 55%;
+    --base-transform: translate(-50%, -50%);
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
+    pointer-events: none;
+    user-select: none;
+    mix-blend-mode: exclusion;
+}
+
+.layer-yellow h1 {
+    font-size: 19vw;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1;
+    color: #cddd6c;
+    -webkit-text-stroke: 0px transparent;
+    display: inline-block;
+    vertical-align: bottom;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Typewriter Base Class - Hidden until JS triggers it */
+.typewriter {
+    width: 0;
+    /* Keeps text completely hidden initially */
+    border-right: 3px solid transparent;
+}
+
+/* The trigger class added by JavaScript */
+.typewriter.is-typing {
+    /* Notice the 4s delays are changed to 0s */
+    animation: typewriter 1s steps(8) 0s 1 normal both,
+        blinkTextCursor 500ms steps(8) 0s infinite normal;
+}
+
+@keyframes typewriter {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 9ch;
+    }
+}
+
+@keyframes blinkTextCursor {
+    from {
+        border-right-color: rgba(255, 255, 255, .75);
+    }
+
+    to {
+        border-right-color: transparent;
+    }
+}
+
+/* Purple Box */
+.scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #ec4895;
+    pointer-events: auto;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.scroll-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-weight: 700;
+    letter-spacing: 3px;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.scroll-arrow {
+    font-size: 1.7rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-15px);
+    }
+
+    60% {
+        transform: translateY(-7px);
+    }
+}
+
+/* --- GALLERY AREA (WIRE-FRAME IMPLEMENTATION) --- */
+.gallery-area {
+    background-color: #ffffff;
+    position: relative;
+    z-index: 20;
+}
+
+/* MARQUEE TEXTS */
+.marquee-wrapper {
+    background-color: #ffffff;
+    padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #000000;
+    overflow: hidden;
+    border-bottom: 0px solid #e5e5e5;
+}
+
+.marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    width: 100%;
+}
+
+.marquee-content {
+    display: flex;
+    width: fit-content;
+    animation: scroll-left 50s linear infinite;
+    contain: paint;
+}
+
+.marquee-content.reverse {
+    animation: scroll-right 60s linear infinite;
+    contain: paint;
+}
+
+.marquee-text-group {
+    display: flex;
+    white-space: nowrap;
+}
+
+.text-small {
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 0.5rem;
+}
+
+.text-large {
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0 0.5rem;
+}
+
+/* Applying rotation specifically to the upside-down block */
+.text-upside-down {
+    transform: rotate(180deg);
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes scroll-right {
+    0% {
+        transform: translateX(-50%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* SLIDER GALLERY SECTION */
+.gallery-slider-section {
+    background-color: var(--bg-color);
+    padding: 7rem 0rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Huge Background Text */
+.gallery-slider-section::before {
+    content: "GALLERY";
+    position: absolute;
+    bottom: -0.25em;
+    left: -0.15em;
+    font-size: 24vw;
+    font-weight: 900;
+    line-height: 0.8;
+    color: var(--nav-bg);
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+    white-space: nowrap;
+
+}
+
+/* Wrapper ensuring the Arrow stays locked to the vertical center of the track itself */
+.slider-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Changed overflow to hidden and added pan-y to hijack horizontal swipes safely */
+.slider-container {
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y;
+    width: 100%;
+    padding: 40px 0;
+    margin: -40px 0;
+}
+
+.slider-container:active {
+    cursor: grabbing;
+}
+
+/* Removes default padding to ensure pure mathematical looping */
+.slider-track {
+    display: flex;
+    gap: 2rem;
+    width: max-content;
+    will-change: transform;
+}
+
+.slider-item {
+    width: 400px;
+    height: 400px;
+    flex-shrink: 0;
+    border: 0px solid #333977;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.4s, box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    background-color: #fff;
+    will-change: transform, box-shadow;
+}
+
+.slider-item:hover {
+    border: 4px solid var(--hl-color);
+    box-shadow: 0 0 20px rgba(236, 72, 149, 0.4);
+    transform: translateY(-8px);
+}
+
+.slider-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    transform: scale(1.08);
+    /* zoom out by 8% */
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transform-origin: center;
+}
+
+.slider-item:hover img {
+    transform: scale(1);
+}
+
+/* NEXT ARROW (Desktop Only) */
+.slider-next-btn {
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background-color: var(--nav-bg);
+    border: 0px solid #a855f7;
+    /* Purple arrow from wireframe */
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.slider-next-btn:hover {
+    background-color: var(--hl-color);
+    color: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.slider-next-btn svg {
+    width: 35px;
+    height: 35px;
+}
+
+
+/* SEE MORE EXTERNAL LINK */
+.see-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 6rem;
+    margin-bottom: 2rem;
+}
+
+.see-more-link {
+    color: var(--nav-bg);
+    text-decoration: none;
+    font-size: 2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.5em 1em;
+    position: relative;
+    transition: 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1;
+}
+
+.see-more-link::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background-color: var(--hl-color);
+    transition: 0.3s ease;
+}
+
+.see-more-link:hover {
+    color: white;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease 0.3s, text-shadow 0.3s ease;
+    transform: translateY(-8px);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.see-more-link:hover::before {
+    width: 100%;
+}
+
+.see-more-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 0;
+    width: 100%;
+    background-color: var(--hl-color);
+    transition: 0.3s ease;
+    z-index: -1;
+}
+
+.see-more-link:hover::after {
+    height: 100%;
+    transition-delay: 0.3s;
+}
+
+.see-more-link svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* --- SCROLL FADE-UP ANIMATION --- */
+.reveal-up {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.reveal-up.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* --- ABOUT / PROFILE AREA --- */
+.about-area {
+    height: 100vh;
+    background-color: var(--nav-bg);
+    color: white;
+    padding: 0 0 5rem 0;
+    /* padding removed from top to fit marquee flush */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 20;
+    overflow: hidden;
+}
+
+.scroll-marquee-container {
+    width: 100%;
+    background: var(--hl-color);
+    color: transparent;
+    -webkit-text-stroke: 2px white;
+    padding: 1rem 0;
+    margin-bottom: 5rem;
+    overflow: hidden;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.scroll-marquee {
+    display: flex;
+    white-space: nowrap;
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    transform: translateX(calc(-30% + var(--scroll-offset, 0px)));
+    will-change: transform;
+}
+
+.about-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+    max-width: 1000px;
+    padding: 0 2rem;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.about-content-wrapper::before {
+    content: "PROFILE";
+    position: absolute;
+    bottom: -0.25em;
+    left: -0.15em;
+    font-size: 24vw;
+    font-weight: 900;
+    line-height: 0.8;
+    color: white;
+    opacity: 0.07;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.about-image {
+    flex-shrink: 0;
+    width: 300px;
+    height: 400px;
+    perspective: 1000px;
+    /* Enables 3D space */
+    -webkit-perspective: 1000px;
+    cursor: pointer;
+    z-index: 2;
+    /* Keeps it above the background text */
+    position: relative;
+    /* Crucial for Z-index working properly to receive clicks */
+    -webkit-tap-highlight-color: transparent;
+    /* Clean touch feedback */
+
+}
+
+.about-image-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform: rotateY(0deg) rotateX(0deg);
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+
+}
+
+/* Hover effect: Skew/tilt like a 3D card */
+.about-image:hover .about-image-inner {
+    transform: rotateY(-10deg) rotateX(5deg);
+}
+
+/* Flipped state */
+.about-image-inner.is-flipped {
+    transform: rotateY(180deg) rotateX(0deg);
+}
+
+/* Hover effect when already flipped */
+.about-image:hover .about-image-inner.is-flipped {
+    transform: rotateY(190deg) rotateX(5deg);
+}
+
+.about-image-front,
+.about-image-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    /* Hides the backside when turned away */
+    -webkit-backface-visibility: hidden;
+    border-radius: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.about-image-front {
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+}
+
+.about-image-back {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+}
+
+.about-image-front img,
+.about-image-back img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    /* Prevents ghost dragging the image natively */
+}
+
+
+.about-text {
+    flex: 1;
+    text-align: left;
+}
+
+.about-text h2 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bg-color);
+}
+
+.about-text p {
+    font-size: 1.35rem;
+    line-height: 1.7;
+    letter-spacing: 0.5px;
+    opacity: 0.95;
+}
+
+/* --- TIMELINE AREA --- */
+
+/* Wrapper limits the height to the remaining space and centers it */
+.timeline-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 4rem;
+
+    flex: 1;
+    /* Tells it to take up available remaining space in the flex container */
+    min-height: 250px;
+    /* Keeps a readable minimum size for scrolling */
+    position: relative;
+    padding: 0 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Vertical responsiveness on short screens so it doesn't overflow 100vh */
+@media (max-height: 950px) {
+    .scroll-marquee-container {
+        margin-bottom: 2rem;
+    }
+
+    .about-image {
+        height: 280px;
+        width: 210px;
+    }
+
+    .about-text h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .about-text p {
+        font-size: 1.1rem;
+    }
+
+    .timeline-wrapper {
+        margin-top: 1.5rem;
+        min-height: 150px;
+    }
+}
+
+/* The actual scrollable box */
+.timeline-container {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 1.5rem;
+    padding-bottom: 2rem;
+
+    /* UX Cue 1: Fade out the bottom text so it looks like it goes "under" the fold */
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+
+    /* Firefox scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--hl-color) rgba(255, 255, 255, 0.05);
+
+    overscroll-behavior: contain;
+    /* Traps momentum, stops bleed to parent */
+    scroll-behavior: auto;
+    /* Ensures native snap-back */
+    contain: layout style paint;
+    /* Isolates layout shifts from Lenis transforms */
+    will-change: transform;
+    /* GPU acceleration for smooth native scroll */
+}
+
+/* UX Cue 2: Custom Webkit Scrollbar */
+.timeline-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.timeline-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.timeline-container::-webkit-scrollbar-thumb {
+    background: var(--hl-color);
+    border-radius: 10px;
+}
+
+/* Timeline Item Layout */
+.timeline-item {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+/* The Vertical Line */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 110px;
+    /* Offset to sit between date and text */
+    top: 5px;
+    bottom: -2.5rem;
+    /* Connects to the next item */
+    width: 2px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Remove the line trailing past the last item */
+.timeline-item:last-child::before {
+    display: none;
+}
+
+/* The Glowing Dot */
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 106px;
+    /* Centered perfectly over the 2px line */
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--hl-color);
+    box-shadow: 0 0 10px var(--hl-color);
+}
+
+.timeline-date {
+    width: 90px;
+    flex-shrink: 0;
+    text-align: right;
+    font-weight: 700;
+    color: var(--social-color2);
+    /* Uses your light blue */
+    font-size: 0.95rem;
+    padding-top: 1px;
+}
+
+.timeline-content {
+    flex: 1;
+    padding-left: 1rem;
+    letter-spacing: 1px;
+}
+
+.timeline-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--bg-color);
+    /* Uses your yellow */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.timeline-content p {
+    font-size: 1rem;
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+/* UX Cue 3: The bouncing scroll hint */
+.timeline-scroll-hint {
+    position: absolute;
+    bottom: 0;
+    right: 2rem;
+    color: var(--social-color2);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    z-index: 10;
+    animation: bounce-small 2s infinite;
+}
+
+@keyframes bounce-small {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Mobile Adjustments for Timeline */
+@media (max-width: 600px) {
+    .timeline-item {
+        gap: 0.5rem;
+        flex-direction: column;
+    }
+
+    /* Shift the line and dot to the left for mobile screens */
+    .timeline-item::before {
+        left: 15px;
+        top: 30px;
+        bottom: -1rem;
+    }
+
+    .timeline-item::after {
+        left: 11px;
+        top: 30px;
+    }
+
+    .timeline-date {
+        text-align: left;
+        width: auto;
+        padding-left: 35px;
+        color: var(--hl-color);
+        /* Swap color for hierarchy on mobile */
+    }
+
+    .timeline-content {
+        padding-left: 35px;
+    }
+
+    .timeline-scroll-hint {
+        right: 50%;
+        transform: translateX(50%);
+        bottom: -10px;
+        animation: none;
+        /* Turn off bounce to keep mobile UI calm */
+    }
+}
+
+/* --- CONTACT SECTION --- */
+.contact-area {
+    min-height: 70vh;
+    height: 70vh;
+    background-color: var(--contact-bg);
+    background-image: repeating-linear-gradient(128deg, #ffffff0e, #ffffff0e 1px, transparent 1px, transparent 16px);
+    color: white;
+    padding: 5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    overflow: hidden;
+}
+
+.contact-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contact-marquee-container {
+    width: 100%;
+    padding: 1rem 0;
+    margin-bottom: 5rem;
+    overflow: hidden;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.contact-scroll-marquee {
+    position: absolute;
+    top: 0.2em;
+    display: flex;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255, 255, 255, 0.89);
+    font-size: 4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    transform: translateX(calc(-30% + var(--scroll-offset, 0px)));
+    will-change: transform;
+    pointer-events: none;
+    user-select: none;
+    contain: paint;
+}
+
+.contact-scroll-marquee-inverse {
+    position: absolute;
+    top: 5em;
+    display: flex;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.89);
+    font-size: 1rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    -webkit-transform: rotate(180deg) translateX(calc(+30% + var(--scroll-offset, 0px)));
+    transform: rotate(180deg) translateX(calc(+30% + var(--scroll-offset, 0px)));
+    will-change: transform, -webkit-transform;
+    pointer-events: none;
+    user-select: none;
+    contain: paint;
+}
+
+.contact-content h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--bg-color);
+}
+
+.contact-content p {
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+    line-height: 1.7;
+    max-width: 600px;
+    opacity: 0.95;
+    margin-bottom: 2.5rem;
+}
+
+.contact-socials {
+    margin-top: 0;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer {
+    background: var(--footer-bg);
+}
+
+.logo-footer {
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.date-footer {
+    color: #d8d8d8;
+    text-align: center;
+    padding: 2rem;
+    letter-spacing: 1px;
+    font-size: 1rem;
+    user-select: none;
+}
+
+.logo-bottom-img {
+    max-width: 80%;
+    height: clamp(40px, 6vw, 60px);
+    object-fit: contain;
+}
+
+/* --- LIGHTBOX MODAL --- */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(20, 20, 25, 0.95);
+    /* Deep dark overlay */
+    z-index: 99998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.lightbox.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-content-wrapper {
+    position: relative;
+    display: inline-flex;
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 1;
+    pointer-events: none;
+    /* Ensures the JS bounds click logic still functions cleanly */
+}
+
+.lightbox.active .lightbox-content-wrapper {
+    transform: scale(1);
+}
+
+.lightbox img,
+.lightbox-video {
+    display: block;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox img {
+    /* Safely allow interactions back onto the specific expanded image */
+    pointer-events: none;
+}
+
+.lightbox-video {
+    width: 80vw;
+    height: 45vw;
+    /* maintain 16:9 ratio approximately based on width */
+    max-width: 1200px;
+    max-height: 675px;
+}
+
+/* Reactivate pointer events for the video only when the lightbox is actually open */
+.lightbox.active .lightbox-video {
+    pointer-events: auto;
+}
+
+.lightbox-watermark {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    color: rgba(255, 255, 255, 0.400);
+    /* Slightly punchier since it's smaller */
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 10;
+    user-select: none;
+    white-space: nowrap;
+}
+
+
+/* Uses the same hover behavior and visuals as the Burger Menu */
+.lightbox-close {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 100;
+}
+
+.lightbox-close:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.lightbox-close svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+}
+
+
+/* --- INTERACTIVE STATES --- */
+body.is-scrolled .sidebar {
+    /* Shrink the sidebar invisibly into the center of the burger button */
+    -webkit-clip-path: circle(0px at 35px 35px);
+    clip-path: circle(0px at 35px 35px);
+    pointer-events: none;
+    /* Prevents invisible links from being clicked */
+}
+
+body.is-scrolled .landing-wrapper {
+    padding-left: 270px;
+}
+
+body.is-scrolled .burger-btn {
+    display: flex;
+}
+
+body.menu-open .sidebar {
+    /* Burst outwards to reveal the menu */
+    -webkit-clip-path: circle(150vh at 35px 35px);
+    clip-path: circle(150vh at 35px 35px);
+    pointer-events: auto;
+}
+
+body.menu-open .burger-btn {
+    display: flex;
+    /* Blend the button seamlessly into the expanded sidebar background */
+    background-color: transparent;
+    box-shadow: none;
+}
+
+
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .burger-btn {
+        display: flex;
+    }
+
+    .sidebar {
+        /* Hidden by default on mobile using the morph center */
+        -webkit-clip-path: circle(0px at 35px 35px);
+        clip-path: circle(0px at 35px 35px);
+        pointer-events: none;
+        padding-top: 100px;
+    }
+
+    .landing-wrapper {
+        padding-left: 0;
+    }
+
+    body.is-scrolled .landing-wrapper {
+        padding-left: 0;
+    }
+
+    .layer-blue {
+        width: 100vw;
+        height: 100vh;
+        bottom: 0;
+        background-size: cover;
+    }
+
+    .layer-red {
+        width: 100vw;
+        height: 85vh;
+        bottom: -2vh;
+        left: 50%;
+        --base-transform: translate(-50%, 0);
+    }
+
+    .layer-yellow h1 {
+        font-size: 24vw;
+    }
+
+
+    .gallery-slider-section {
+        padding: 4rem 0rem;
+    }
+
+    .slider-item {
+        width: 260px;
+        height: 260px;
+    }
+
+    .see-more-link {
+        font-size: 1.5rem;
+        letter-spacing: 2.1px;
+    }
+
+
+    .about-content-wrapper {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .about-text {
+        text-align: center;
+    }
+
+    /* Shrink the huge margins to save vertical space */
+    .scroll-marquee-container {
+        margin-bottom: 2rem;
+    }
+
+    /* Shrink the profile image a bit for tablets */
+    .about-image {
+        width: 225px;
+        height: 300px;
+    }
+
+    .scroll-marquee {
+        transform: translateX(calc(-120% + var(--scroll-offset, 0px)));
+    }
+}
+
+@media (max-width: 600px) {
+
+    .layer-yellow {
+        top: 50%;
+        left: 20%;
+    }
+
+    .layer-yellow h1 {
+        padding-top: 90px;
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        /* Stacks the letters seamlessly */
+        font-size: 14vh;
+        /* Uses viewport height to dynamically fit vertical orientation */
+        letter-spacing: -2vh;
+    }
+
+    /* Mobile Typewriter Override */
+    .typewriter {
+        width: auto;
+        /* Reset desktop width */
+        height: 0;
+        /* Hide vertically instead */
+        border-right: 0px;
+        border-bottom: 3px solid transparent;
+    }
+
+    .typewriter.is-typing {
+        animation: typewriterMobile 1s steps(8) 0s 1 normal both,
+            blinkTextCursorMobile 500ms steps(8) 0s infinite normal;
+    }
+
+    @keyframes typewriterMobile {
+        from {
+            height: 0;
+        }
+
+        to {
+            height: 7.4em;
+        }
+    }
+
+    @keyframes blinkTextCursorMobile {
+        from {
+            border-bottom-color: rgba(255, 255, 255, .75);
+        }
+
+        to {
+            border-bottom-color: transparent;
+        }
+    }
+
+    .layer-red {
+        width: 140vw;
+        /* Scales it back up beautifully without risking off-center bugs */
+        height: 85vh;
+        bottom: -2vh;
+        left: 50%;
+    }
+
+    .layer-blue {
+        width: 100vw;
+        height: 100vh;
+        bottom: 0;
+        left: 50%;
+        background-size: cover;
+    }
+
+    .scroll-indicator {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .text-large {
+        font-size: 2.5rem;
+    }
+
+    /* Hide arrow on mobile to strictly rely on swipe interactions per wireframe specs */
+    .slider-next-btn {
+        display: none;
+    }
+
+    .slider-item:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .see-more-link {
+        letter-spacing: 2.2px;
+    }
+
+
+    .about-area {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 4rem;
+    }
+
+    /* Shrink the profile image further for phones */
+    .about-image {
+        width: 180px;
+        height: 240px;
+    }
+
+    .about-content-wrapper {
+        gap: 1.5rem;
+    }
+
+    .scroll-marquee-container {
+        -webkit-text-stroke: 1px white;
+        margin-bottom: 1rem;
+    }
+
+    .scroll-marquee {
+        font-size: 2.5rem;
+    }
+
+    .about-text h2 {
+        font-size: 2.5rem;
+    }
+
+    /* Give the timeline a fixed height so it still scrolls internally 
+       even though the parent section is now "height: auto" */
+    .timeline-wrapper {
+        min-height: 350px;
+        margin-top: 2rem;
+    }
+
+    .timeline-container {
+        min-height: auto;
+        overflow: visible;
+    }
+
+    .timeline-scroll-hint {
+        font-size: 0px;
+    }
+
+    .contact-socials {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .contact-socials a {
+        flex: 1 1 auto;
+        min-width: 40px;
+    }
+}
+
+/* --- VIRTUAL PAGE SYSTEM --- */
+.virtual-page {
+    position: absolute;
+    /* Changed from fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 3rem 3rem;
+    min-height: 100vh;
+    background-color: white;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    /* Cleaner than pointer-events for absolute elements */
+    transition: opacity 0.7s ease, visibility 0.7s;
+    /* Removed overflow-y and overscroll-behavior. The window handles it now! */
+    display: none;
+}
+
+.virtual-page.is-active {
+    opacity: 1;
+    visibility: visible;
+    position: relative;
+}
+
+/* Pauses the infinite CSS marquees in the background when the virtual page is open */
+body.pause-marquees .marquee-content {
+    animation-play-state: paused !important;
+}
+
+/* Close Button */
+.virtual-close {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 10000;
+}
+
+.virtual-close:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.virtual-close svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* --- VIRTUAL PAGE DARK MODE BUTTON --- */
+.virtual-dark-mode {
+    position: fixed;
+    top: 95px;
+    /* Sits exactly 10px below the close button (30px top + 50px height + 10px gap) */
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--nav-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 10000;
+}
+
+.virtual-dark-mode:hover {
+    transform: scale(1.05);
+    background-color: var(--hl-color);
+}
+
+.virtual-dark-mode svg {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+}
+
+/* Default State (Light Mode) */
+.icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.icon-sun {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+    /* Shrunk and rotated away */
+}
+
+/* Active State (Dark Mode) */
+.virtual-page.is-dark .icon-moon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+    /* Spins and fades out */
+}
+
+.virtual-page.is-dark .icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    /* Spins in and grows */
+}
+
+/* --- VIRTUAL PAGE DARK MODE OVERRIDES --- */
+.virtual-page.is-dark {
+    background-color: var(--archive-bg);
+}
+
+.virtual-page.is-dark .page-title {
+    color: var(--bg-color)
+}
+
+
+.virtual-page.is-dark .filter-btn {
+    color: #f1f1f1;
+    border-color: var(--hl-color);
+}
+
+/*  Dark Mode Active State */
+.virtual-page.is-dark .filter-btn.active {
+    background: var(--hl-color);
+    color: white;
+}
+
+/*  Dark Mode Hover State (Inactive) */
+.virtual-page.is-dark .filter-btn:not(.active):hover {
+    background: rgba(236, 72, 149, 0.25);
+    /* Slightly stronger pink wash against the dark background */
+    color: #f1f1f1;
+}
+
+.virtual-page.is-dark .bento-container {
+    /* Swaps the black diagonal lines for subtle white lines */
+    background-image: repeating-linear-gradient(128deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 16px);
+}
+
+.virtual-page.is-dark .no-results-message {
+    color: #f1f1f1;
+}
+
+/* --- BENTO GALLERY PAGE --- */
+/* THE BREAKOUT TRICK: Forces background edge-to-edge without moving content */
+.bento-container {
+    position: relative;
+    width: 100vw;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4rem 0;
+    /* Extends the diagonal pattern top and bottom */
+    margin: 2rem 0;
+    background-image: repeating-linear-gradient(128deg, #0000001f, #0000001f 1px, transparent 1px, transparent 16px);
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--nav-bg);
+}
+
+/* Filter Buttons */
+.gallery-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4rem;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 2px solid var(--hl-color);
+    color: var(--nav-bg);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Active State - Bold, Solid Fill */
+.filter-btn.active {
+    background: var(--hl-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(236, 72, 149, 0.4);
+}
+
+/* Hover State (Inactive) - Soft Ghost Tint */
+.filter-btn:not(.active):hover {
+    background: rgba(236, 72, 149, 0.12);
+    /* A very subtle pink wash */
+    color: var(--hl-color);
+    /* Keeps the text pink instead of white */
+    transform: translateY(-2px);
+}
+
+/* Timeline Layout */
+.bento-timeline {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    /* Re-aligns grid to match the title above it */
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+}
+
+/* --- NESTED STICKY TIMELINE LAYOUT --- */
+.timeline-year-group {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    /* Crucial: stops the sidebar from stretching, allowing it to stick */
+}
+
+/* The Year (Stays pinned until the whole year is over) */
+.timeline-year-sidebar {
+    width: 120px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+    text-align: right;
+    border-right: 3px solid var(--hl-color);
+    padding-right: 1.5rem;
+    z-index: 10;
+}
+
+.timeline-year-sidebar h3 {
+    font-size: 2.5rem;
+    color: var(--hl-color);
+    line-height: 1;
+    margin: 0;
+}
+
+.timeline-year-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+}
+
+
+/* Hidden State for JS Filtering */
+.timeline-year-group.is-hidden {
+    display: none;
+}
+
+/* The Dense Bento Grid */
+.bento-grid {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+/* Bento Item Styling */
+.bento-item {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transform-origin: center;
+    animation: popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    min-height: 250px;
+    max-height: 450px;
+    /* Grow proportionally based on the ratio */
+    flex-grow: var(--ratio, 1);
+    /* Set the ideal starting width based on height * ratio */
+    flex-basis: calc(var(--ratio, 1) * 250px);
+}
+
+
+/* THE GPU SKELETON PULSE */
+.bento-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.08);
+    /* Subtle white works beautifully on dark mode */
+    z-index: 0;
+    will-change: opacity;
+    /* Tells the GPU to handle this exclusively */
+    animation: skeletonPulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes skeletonPulse {
+    0% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* THE KILL SWITCH: Completely destroys the animation to save battery */
+.bento-item.is-loaded::before {
+    content: none;
+    animation: none;
+}
+
+.bento-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+    transform: scale(1.08);
+    z-index: 1;
+    opacity: 0;
+    /* Hide the image while it downloads */
+    /* Add opacity to your existing transition so it fades in smoothly */
+    transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.4s ease;
+}
+
+/* Fade the image in once it is fully downloaded */
+.bento-item.is-loaded img {
+    opacity: 1;
+}
+
+.bento-item:hover img {
+    transform: scale(1);
+}
+
+/* Structural Bento Spans */
+/* .span-2-col { grid-column: span 2; }
+.span-4-col { grid-column: span 4; }
+.span-2-row { grid-row: span 2; } */
+
+/* Filter Hidden State */
+.bento-item.is-hidden {
+    display: none;
+}
+
+/* --- BENTO GALLERY EMPTY STATE --- */
+.no-results-message {
+    display: none;
+    /* Hidden by default */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem;
+    color: var(--nav-bg);
+    animation: popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.no-results-message.is-active {
+    display: flex;
+    /* Shown when JavaScript adds the class */
+}
+
+.no-results-message svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.no-results-message h3 {
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.no-results-message p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Mobile Responsiveness for bento*/
+@media (max-width: 768px) {
+
+    /* 1. Push the page title and filter tags down so they don't underlap the buttons */
+    .virtual-page {
+        padding: 2rem 1.5rem;
+        padding-top: 90px;
+        /* Safely clears the space taken up by the buttons */
+    }
+
+    /* 2. Shrink the Close button and pull it closer to the edge */
+    .virtual-close {
+        top: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
+
+    /* 3. Shrink the Dark Mode button and adjust its gap */
+    .virtual-dark-mode {
+        top: 20px;
+        right: 75px;
+        /* 20px right + 45px height + 10px gap */
+        width: 45px;
+        height: 45px;
+    }
+
+    /* 4. Scale down the SVG icons inside the buttons */
+    .virtual-close svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .virtual-dark-mode svg {
+        width: 20px;
+        /* The dark mode SVG was naturally smaller than the close SVG */
+        height: 20px;
+    }
+
+    .bento-timeline {
+        padding: 0 1.5rem;
+        /* Matches mobile padding */
+    }
+
+    .timeline-year-group {
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .timeline-year-sidebar {
+        width: 100%;
+        position: static;
+        text-align: left;
+        border-right: none;
+        border-bottom: 3px solid var(--hl-color);
+        padding-right: 0;
+        padding-bottom: 0.5rem;
+    }
+
+    .timeline-year-content {
+        gap: 3rem;
+    }
+
+    .bento-grid {
+        justify-content: center;
+    }
+
+    .bento-item {
+        height: 160px;
+        flex-basis: calc(var(--ratio, 1) * 160px);
+        /* This guarantees any leftover item takes up 100% of the empty space to reach the edges. */
+        flex-grow: 1;
+        min-width: 130px;
+    }
+}
+
+/* --- CLICK RIPPLE ANIMATION --- */
+.click-ripple {
+    position: fixed;
+    /* Fixed so it's relative to the viewport (client coordinates) */
+    width: 20px;
+    height: 20px;
+    border: 4px solid var(--hl-color, #ec4895);
+    border-radius: 4px;
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    /* Let clicks pass through */
+    z-index: 99999;
+    animation: ripple-expand 0.6s ease-out forwards;
+}
+
+@keyframes ripple-expand {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+        border-width: 0px;
+    }
+}
