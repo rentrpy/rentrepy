@@ -610,7 +610,7 @@ body.is-scrolled:not(.menu-open) .back-to-top {
     top: 20%;
     left: 55%;
     --base-transform: translate(-50%, -50%);
-    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px));
+    transform: var(--base-transform) translate(var(--tx, 0px), var(--ty, 0px)) translateZ(0);
     pointer-events: none;
     user-select: none;
     mix-blend-mode: exclusion;
@@ -1752,10 +1752,16 @@ body.menu-open .burger-btn {
     .layer-yellow {
         top: 50%;
         left: 20%;
+        padding-top: 90px;
+        /* iOS Safari Bounds Calculation Fix */
+        display: flex;
+        width: -webkit-max-content;
+        width: max-content;
+        height: -webkit-max-content;
+        height: max-content;
     }
 
     .layer-yellow h1 {
-        padding-top: 90px;
         writing-mode: vertical-rl;
         text-orientation: upright;
         /* Stacks the letters seamlessly */
