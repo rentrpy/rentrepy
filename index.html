@@ -31,7 +31,12 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
-<body>
+<body style="overflow: hidden;">
+
+    <!-- Initial Loader to prevent FOUC -->
+    <div id="initial-loader"
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: #12131f; background-image: repeating-linear-gradient(0deg, #ffffff05, #ffffff05 1px, transparent 1px, transparent 8px), radial-gradient(circle, rgb(23, 24, 39) 0%, rgba(0, 0, 0, 1) 100%); z-index: 99999; display: flex; justify-content: center; align-items: center;">
+    </div>
 
     <!-- GLOBAL BROWSER POPUP -->
     <div id="browser-popup" class="browser-popup"

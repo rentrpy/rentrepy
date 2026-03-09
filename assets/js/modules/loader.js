@@ -45,7 +45,10 @@ export function initLoader(heroImagePromise) {
     }
 
     // DOM Elements Setup
-    const overlay = document.createElement("div");
+    let overlay = document.getElementById("initial-loader");
+    if (!overlay) {
+        overlay = document.createElement("div");
+    }
     overlay.style.position = "fixed";
     overlay.style.top = "0";
     overlay.style.left = "0";
